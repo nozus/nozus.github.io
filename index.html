@@ -64,9 +64,18 @@
 
             <!-- ===== MARKET VIEW ===== -->
             <div id="market-view">
-                <div class="mb-2">
-                    <h1>Market</h1>
-                    <p class="text-muted">Live performance of personal currencies.</p>
+                <div class="mb-2 flex justify-between align-end">
+                    <div>
+                        <h1>Market</h1>
+                        <p class="text-muted">Live performance of personal currencies.</p>
+                    </div>
+                    <div class="range-selector" id="market-tabs">
+                        <button class="range-btn active" data-range="live">Live</button>
+                        <button class="range-btn" data-range="1h">1H</button>
+                        <button class="range-btn" data-range="1d">1D</button>
+                        <button class="range-btn" data-range="1m">1M</button>
+                        <button class="range-btn" data-range="1y">1Y</button>
+                    </div>
                 </div>
                 <div class="card" style="padding: 0; overflow: hidden;">
                     <table class="data-table">
@@ -107,13 +116,39 @@
                 <div class="detail-grid">
                     <div>
                         <div class="card mb-2" style="padding: 0; overflow: hidden;">
+                            <div class="p-1 flex justify-between align-center border-b">
+                                <div class="range-selector mb-0" id="chart-tabs">
+                                    <button class="range-btn" data-range="1h">1H</button>
+                                    <button class="range-btn active" data-range="1d">1D</button>
+                                    <button class="range-btn" data-range="1m">1M</button>
+                                    <button class="range-btn" data-range="1y">1Y</button>
+                                    <button class="range-btn" data-range="all">All</button>
+                                </div>
+                                <span class="text-xs text-muted font-bold uppercase">Real-time Feed</span>
+                            </div>
                             <div id="chart-container" style="height: 420px;"></div>
                         </div>
-                        <div class="stats-grid">
+                        <div class="stats-grid mb-2">
                             <div class="stat-item"><span class="stat-label">IPO Price</span><span class="stat-value" id="stat-ipo">10.00</span></div>
                             <div class="stat-item"><span class="stat-label">Current Price</span><span class="stat-value" id="stat-price">—</span></div>
                             <div class="stat-item"><span class="stat-label">Total Return</span><span class="stat-value" id="stat-return">—</span></div>
                             <div class="stat-item"><span class="stat-label">Your Holdings</span><span class="stat-value" id="stat-holdings">0 shares</span></div>
+                        </div>
+
+                        <div class="card" style="padding: 0; overflow: hidden;">
+                            <div class="p-1 border-b"><h3 style="font-size: 0.9rem;">Price History</h3></div>
+                            <table class="data-table" style="font-size: 0.85rem;">
+                                <thead>
+                                    <tr>
+                                        <th>Date & Time</th>
+                                        <th style="text-align:right">Price</th>
+                                        <th style="text-align:right">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="history-body">
+                                    <tr><td colspan="3" class="text-center py-2 text-muted">No history recorded yet.</td></tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                     <div>

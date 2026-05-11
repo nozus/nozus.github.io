@@ -213,12 +213,13 @@ header {
 
 /* --- Range Selector --- */
 .range-selector {
-    display: flex; gap: 0.5rem; margin-bottom: 1.25rem;
+    display: flex; gap: 0.25rem; margin-bottom: 1.25rem;
 }
+.range-selector.mb-0 { margin-bottom: 0; }
 .range-btn {
-    padding: 0.5rem 1.25rem; border-radius: 10px; border: 1px solid var(--border);
+    padding: 0.4rem 0.8rem; border-radius: 8px; border: 1px solid var(--border);
     background: #fff; color: var(--text-muted); font-weight: 700;
-    font-size: 0.8rem; cursor: pointer; transition: all 0.2s;
+    font-size: 0.75rem; cursor: pointer; transition: all 0.2s;
     font-family: 'Plus Jakarta Sans', sans-serif;
 }
 .range-btn:hover { border-color: var(--primary); color: var(--primary); }
@@ -331,6 +332,7 @@ header {
 .text-danger { color: var(--danger); }
 .uppercase { text-transform: uppercase; }
 .grid { display: grid; }
+.border-b { border-bottom: 1px solid var(--border); }
 
 /* --- Player Icons (Brawl Stars style) --- */
 .player-icon {

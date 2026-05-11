@@ -14,7 +14,9 @@ let state = {
     tradeAction: 'buy',
     chart: null,
     chartSeries: null,
-    holdings: {}
+    holdings: {},
+    marketRange: 'live',
+    chartRange: '1d'
 };
 
 const $ = (id) => document.getElementById(id);
@@ -22,12 +24,17 @@ const $ = (id) => document.getElementById(id);
 // ============================
 // REAL CHANGE (vs IPO price of 10)
 // ============================
-function getRealChange(currency) {
-    const ipo = 10;
+function getRealChange(currency, timeframe = 'live') {
     const current = currency.current_price;
+    let base = 10; // IPO default
+
+    if (timeframe !== 'live' && currency.history_at_range) {
+        base = currency.history_at_range;
+    }
+
     return {
-        change: parseFloat((current - ipo).toFixed(2)),
-        pct: parseFloat((((current - ipo) / ipo) * 100).toFixed(2))
+        change: parseFloat((current - base).toFixed(2)),
+        pct: parseFloat((((current - base) / base) * 100).toFixed(2))
     };
 }
 
@@ -91,7 +98,27 @@ async function fetchHoldings() {
 async function refreshData() {
     try {
         const { data: c } = await supabase.from('currencies').select('*').order('created_at', { ascending: false });
-        if (c) { state.currencies = c; renderMarket(); updateTicker(); }
+        if (c) {
+            // If timeframe is not live, we need to fetch base prices
+            if (state.marketRange !== 'live') {
+                const interval = getIntervalSeconds(state.marketRange);
+                const startTime = new Date(Date.now() - interval * 1000).toISOString();
+
+                for (let curr of c) {
+                    const { data: hist } = await supabase
+                        .from('price_history')
+                        .select('price')
+                        .eq('currency_id', curr.id)
+                        .lte('recorded_at', startTime)
+                        .order('recorded_at', { ascending: false })
+                        .limit(1);
+                    curr.history_at_range = hist && hist[0] ? parseFloat(hist[0].price) : 10;
+                }
+            }
+            state.currencies = c;
+            renderMarket();
+            updateTicker();
+        }
 
         const { data: l } = await supabase.from('profiles').select('*').order('points', { ascending: false }).limit(10);
         if (l) { state.leaderboard = l; renderLeaderboard(); }
@@ -100,16 +127,33 @@ async function refreshData() {
     }
 }
 
+function getIntervalSeconds(range) {
+    switch (range) {
+        case '1h': return 3600;
+        case '1d': return 86400;
+        case '1m': return 2592000;
+        case '1y': return 31536000;
+        default: return 0;
+    }
+}
+
 // ============================
 // FETCH REAL PRICE HISTORY
 // ============================
-async function fetchPriceHistory(currencyId) {
-    const { data, error } = await supabase
+async function fetchPriceHistory(currencyId, range = '1d') {
+    let query = supabase
         .from('price_history')
         .select('price, recorded_at')
         .eq('currency_id', currencyId)
         .order('recorded_at', { ascending: true });
 
+    if (range !== 'all') {
+        const seconds = getIntervalSeconds(range);
+        const startTime = new Date(Date.now() - seconds * 1000).toISOString();
+        query = query.gte('recorded_at', startTime);
+    }
+
+    const { data, error } = await query;
     if (error || !data) return [];
 
     return data.map(d => ({
@@ -139,7 +183,7 @@ function renderMarket() {
         return;
     }
     body.innerHTML = state.currencies.map(c => {
-        const { change, pct } = getRealChange(c);
+        const { change, pct } = getRealChange(c, state.marketRange);
         const pos = change >= 0;
         const cls = pos ? 'text-positive' : 'text-negative';
         const sign = pos ? '+' : '';
@@ -212,6 +256,7 @@ function openDetail(currencyId) {
 
     setView('detail');
     renderChart();
+    renderHistoryTable();
     updateTradeTotal();
 }
 
@@ -226,10 +271,10 @@ async function renderChart() {
     const c = state.selectedCurrency;
     if (!c) return;
 
-    // Fetch REAL price history from database
-    const data = await fetchPriceHistory(c.id);
+    // Fetch REAL price history based on range
+    const data = await fetchPriceHistory(c.id, state.chartRange);
 
-    const { change } = getRealChange(c);
+    const { change } = getRealChange(c, state.chartRange);
     const pos = change >= 0;
     const lineColor = pos ? '#10b981' : '#ef4444';
     const topColor = pos ? 'rgba(16,185,129,0.25)' : 'rgba(239,68,68,0.2)';
@@ -252,7 +297,11 @@ async function renderChart() {
             horzLine: { color: '#6366f1', width: 1, style: 2, labelBackgroundColor: '#6366f1' }
         },
         rightPriceScale: { borderColor: '#f1f5f9' },
-        timeScale: { borderColor: '#f1f5f9', timeVisible: true },
+        timeScale: { 
+            borderColor: '#f1f5f9', 
+            timeVisible: true,
+            secondsVisible: false
+        },
         handleScroll: true,
         handleScale: true
     });
@@ -268,7 +317,7 @@ async function renderChart() {
     });
 
     if (data.length === 0) {
-        // No trades yet — show a single point at IPO price
+        // No data in range — show current price
         const now = Math.floor(Date.now() / 1000);
         series.setData([{ time: now, value: c.current_price }]);
     } else {
@@ -284,6 +333,37 @@ async function renderChart() {
         chart.applyOptions({ width: container.clientWidth });
     });
     resizeObserver.observe(container);
+}
+
+// ============================
+// HISTORY TABLE
+// ============================
+async function renderHistoryTable() {
+    const body = $('history-body');
+    if (!body || !state.selectedCurrency) return;
+
+    const { data, error } = await supabase
+        .from('price_history')
+        .select('*')
+        .eq('currency_id', state.selectedCurrency.id)
+        .order('recorded_at', { ascending: false })
+        .limit(20);
+
+    if (error || !data || data.length === 0) {
+        body.innerHTML = `<tr><td colspan="3" class="text-center py-2 text-muted">No trades recorded yet.</td></tr>`;
+        return;
+    }
+
+    body.innerHTML = data.map(d => {
+        const date = new Date(d.recorded_at);
+        const timeStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        return `
+        <tr>
+            <td class="text-muted">${timeStr}</td>
+            <td class="font-bold" style="text-align:right">${parseFloat(d.price).toFixed(2)}</td>
+            <td style="text-align:right"><span class="text-xs uppercase font-bold text-dim">Trade</span></td>
+        </tr>`;
+    }).join('');
 }
 
 // ============================
@@ -384,6 +464,7 @@ async function postTradeRefresh(currencyId) {
     await refreshData();
     updateUserUI();
     if (state.view === 'detail' && state.selectedCurrency) {
+        renderHistoryTable();
         const updated = state.currencies.find(x => x.id === currencyId);
         if (updated) {
             state.selectedCurrency = updated;
@@ -473,6 +554,26 @@ function setupListeners() {
 
     $('trade-shares')?.addEventListener('input', updateTradeTotal);
     $('btn-execute-trade')?.addEventListener('click', executeTrade);
+
+    // Market range tabs
+    $('market-tabs')?.addEventListener('click', (e) => {
+        const btn = e.target.closest('.range-btn');
+        if (btn) {
+            state.marketRange = btn.dataset.range;
+            document.querySelectorAll('#market-tabs .range-btn').forEach(b => b.classList.toggle('active', b === btn));
+            refreshData();
+        }
+    });
+
+    // Chart range tabs
+    $('chart-tabs')?.addEventListener('click', (e) => {
+        const btn = e.target.closest('.range-btn');
+        if (btn) {
+            state.chartRange = btn.dataset.range;
+            document.querySelectorAll('#chart-tabs .range-btn').forEach(b => b.classList.toggle('active', b === btn));
+            renderChart();
+        }
+    });
 }
 
 // ============================
