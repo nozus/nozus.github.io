@@ -45,7 +45,7 @@
                 </div>
                 <hr style="margin: 1rem 0; border: none; border-top: 1px solid var(--border);">
                 <div class="nav-link" id="btn-launch">
-                    <i data-lucide="plus-circle"></i> <span>Launch Token</span>
+                    <i data-lucide="plus-circle"></i> <span>Launch Currency</span>
                 </div>
                 <div class="nav-link" id="btn-settings">
                     <i data-lucide="settings"></i> <span>Settings</span>
@@ -59,7 +59,7 @@
         <main class="main-content">
             <div class="ticker">
                 <div class="ticker-content" id="ticker-data">
-                    <!-- Dynamic Ticker -->
+                    <span style="margin-right: 2rem;">NZUS <b style="color: var(--accent)">10.00</b></span>
                 </div>
             </div>
 
@@ -111,11 +111,11 @@
 
     <div id="modal-launch" class="modal-overlay">
         <div class="modal card" style="width: 100%; max-width: 400px; margin: auto;">
-            <h3 class="mb-2">Launch Token</h3>
+            <h3 class="mb-2">Launch Currency</h3>
             <form id="form-launch">
-                <div class="input-field"><label>Name</label><input type="text" id="launch-name" required></div>
-                <div class="input-field"><label>Symbol</label><input type="text" id="launch-symbol" required maxlength="5"></div>
-                <button type="submit" class="btn btn-primary w-full">Launch</button>
+                <div class="input-field"><label>Currency Name</label><input type="text" id="launch-name" required placeholder="e.g. Nozus Coin"></div>
+                <div class="input-field"><label>Ticker Symbol (4 Letters)</label><input type="text" id="launch-symbol" required maxlength="4" minlength="4" placeholder="NZUS"></div>
+                <button type="submit" class="btn btn-primary w-full">Launch Currency</button>
                 <button type="button" class="btn btn-ghost w-full mt-1 btn-close">Cancel</button>
             </form>
         </div>

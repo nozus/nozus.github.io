@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nozus | Enter the Exchange</title>
     <link rel="icon" type="image/png" href="nozus_logo_favicon_1778476398592.png">
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap"
+        rel="stylesheet">
     <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -16,7 +18,11 @@
             --bg-gradient: mesh-gradient(at 0% 0%, #4f46e5 0%, #ec4899 100%);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
@@ -25,7 +31,7 @@
             align-items: center;
             justify-content: center;
             background: #0f172a;
-            background-image: 
+            background-image:
                 radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
                 radial-gradient(at 100% 0%, rgba(236, 72, 153, 0.15) 0px, transparent 50%),
                 radial-gradient(at 100% 100%, rgba(20, 184, 166, 0.15) 0px, transparent 50%),
@@ -58,7 +64,7 @@
             font-weight: 800;
             text-align: center;
             margin-bottom: 0.5rem;
-            background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.5) 100%);
+            background: linear-gradient(135deg, #fff 0%, rgba(255, 255, 255, 0.5) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             letter-spacing: -2px;
@@ -162,6 +168,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="blob" style="top: -100px; left: -100px;"></div>
     <div class="blob" style="bottom: -100px; right: -100px; background: var(--secondary);"></div>
@@ -180,7 +187,8 @@
                     <label>Password</label>
                     <div style="position: relative;">
                         <input type="password" id="password" placeholder="••••••••" required>
-                        <span id="toggle-password-visibility" style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); cursor: pointer; color: rgba(255,255,255,0.4); font-size: 0.7rem; font-weight: 700; user-select: none;">SHOW</span>
+                        <span id="toggle-password-visibility"
+                            style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); cursor: pointer; color: rgba(255,255,255,0.4); font-size: 0.7rem; font-weight: 700; user-select: none;">SHOW</span>
                     </div>
                 </div>
                 <button type="submit" id="submit-btn" class="btn-submit">Start Trading</button>
@@ -189,7 +197,7 @@
             <div class="error-box" id="error-display"></div>
 
             <p class="toggle-text">
-                <span id="toggle-desc">Don't have an account?</span> 
+                <span id="toggle-desc">Don't have an account?</span>
                 <span class="toggle-link" id="toggle-auth">Create one</span>
             </p>
         </div>
@@ -197,7 +205,7 @@
 
     <script type="module">
         import CONFIG from './config.js?v=2';
-        
+
         const { createClient } = window.supabase;
         const supabase = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
 
@@ -249,24 +257,24 @@
                     help += "3. Click <b>API</b>.<br>";
                     help += "4. Look for <b>'anon' (public)</b> key and copy that long string.<br><br>";
                     help += "<b>Already updated?</b> Your browser might be caching the old key. Please press <b>Ctrl + F5</b> (or Cmd + Shift + R on Mac) to force a refresh.";
-                    
+
                     throw new Error(help);
                 }
 
                 let res;
                 if (isSignUp) {
                     console.log("Attempting Sign Up...");
-                    res = await supabase.auth.signUp({ 
-                        email, 
-                        password: pass, 
-                        options: { data: { username: user } } 
+                    res = await supabase.auth.signUp({
+                        email,
+                        password: pass,
+                        options: { data: { username: user } }
                     });
                     if (res.error) throw res.error;
-                    
+
                     try {
                         await supabase.from('profiles').insert([{ id: res.data.user.id, username: user, points: 1000 }]);
                     } catch (pE) { console.warn("Profile init failed:", pE); }
-                    
+
                     alert("Account Created!");
                 } else {
                     console.log("Attempting Sign In...");
@@ -278,7 +286,7 @@
             } catch (err) {
                 console.error("AUTH ERROR:", err);
                 let message = err.message || "Unknown connection error.";
-                
+
                 if (message.includes("confirmation")) {
                     message = "<b>SIGNUP FAILED:</b> Email confirmation is enabled in your Supabase settings.<br><br>";
                     message += "To fix this, go to your <b>Supabase Dashboard</b> > <b>Authentication</b> > <b>Settings</b> and <b>uncheck</b> 'Confirm email'.";
@@ -287,7 +295,7 @@
                     message += "1. Wait 60 seconds and try again.<br>";
                     message += "2. To fix this permanently: Go to your <b>Supabase Dashboard</b> > <b>Authentication</b> > <b>Settings</b> and increase the 'Rate Limits' (e.g., set 'Max Signups per hour' to 100).";
                 }
-                
+
                 els.errorDisplay.innerHTML = message;
                 els.errorDisplay.style.display = 'block';
             } finally {
@@ -296,4 +304,5 @@
         };
     </script>
 </body>
+
 </html>

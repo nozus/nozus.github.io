@@ -32,6 +32,19 @@ const els = {
     modalTrade: document.getElementById('modal-trade')
 };
 
+// Custom Notification System (Replaces alert)
+function notify(msg, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.innerText = msg;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.classList.add('show'), 10);
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 500);
+    }, 4000);
+}
+
 async function init() {
     console.log("Initializing Nozus App...");
     setupListeners();
@@ -49,7 +62,6 @@ async function checkSession() {
             await fetchProfile(user.id);
             updateUI();
         } else {
-            console.warn("No user session found. Redirecting...");
             window.location.href = 'auth.html';
         }
     } catch (e) {
@@ -90,9 +102,13 @@ async function refreshData() {
 // Rendering
 function renderMarket() {
     if (!els.marketBody) return;
+    if (state.currencies.length === 0) {
+        els.marketBody.innerHTML = `<tr><td colspan="4" class="text-center py-2 text-muted">No currencies active. Be the first to launch!</td></tr>`;
+        return;
+    }
     els.marketBody.innerHTML = state.currencies.map(c => `
         <tr>
-            <td><span class="font-bold text-primary">$${c.symbol}</span></td>
+            <td><span class="symbol-pill">${c.symbol}</span></td>
             <td>${c.name}</td>
             <td class="font-bold">${c.current_price} pts</td>
             <td>
@@ -116,8 +132,8 @@ function renderLeaderboard() {
 function updateTicker() {
     const container = document.getElementById('ticker-data');
     if (!container) return;
-    const items = state.currencies.slice(0, 6).map(c => `
-        <span style="margin-right: 2rem;">$${c.symbol} <b style="color: var(--accent)">${c.current_price}</b></span>
+    const items = state.currencies.slice(0, 8).map(c => `
+        <span style="margin-right: 2rem;">${c.symbol} <b style="color: var(--accent)">${c.current_price}</b></span>
     `).join('');
     container.innerHTML = items + items;
 }
@@ -131,6 +147,10 @@ function updateUI() {
             els.navAvatar.src = state.profile.avatar_url;
             els.navAvatar.style.display = 'block';
             els.navInitials.style.display = 'none';
+        } else {
+            els.navAvatar.style.display = 'none';
+            els.navInitials.style.display = 'flex';
+            els.navInitials.innerText = state.profile.username[0].toUpperCase();
         }
     }
 }
@@ -169,7 +189,8 @@ function setupListeners() {
         if (!error) {
             els.modalSettings.style.display = 'none';
             await checkSession();
-        }
+            notify("Profile updated!");
+        } else notify(error.message, 'error');
     };
 
     els.marketBody.onclick = (e) => {
@@ -190,7 +211,7 @@ function setupListeners() {
         const amount = parseInt(document.getElementById('trade-amount').value);
         const cost = price * amount;
 
-        if (state.profile.points < cost) return alert("Insufficient points");
+        if (state.profile.points < cost) return notify("Insufficient points", 'error');
 
         const { error } = await supabase.from('profiles').update({ points: state.profile.points - cost }).eq('id', state.user.id);
         if (!error) {
@@ -198,20 +219,36 @@ function setupListeners() {
             els.modalTrade.style.display = 'none';
             await refreshData();
             await checkSession();
-            alert("Success!");
-        }
+            notify(`Successfully invested in ${amount} shares!`, 'success');
+        } else notify(error.message, 'error');
     };
 
     document.getElementById('form-launch').onsubmit = async (e) => {
         e.preventDefault();
+        const name = document.getElementById('launch-name').value.trim();
+        const symbol = document.getElementById('launch-symbol').value.trim().toUpperCase();
+        
+        // Ticker Validation: 4 letters, no numbers
+        if (!/^[A-Z]{4}$/.test(symbol)) {
+            return notify("Ticker must be exactly 4 letters (A-Z) and no numbers.", 'error');
+        }
+
         const t = {
             creator_id: state.user.id,
-            name: document.getElementById('launch-name').value,
-            symbol: document.getElementById('launch-symbol').value.toUpperCase(),
+            name: name,
+            symbol: symbol,
             current_price: 10
         };
+
         const { error } = await supabase.from('currencies').insert([t]);
-        if (!error) { els.modalLaunch.style.display = 'none'; refreshData(); }
+        if (!error) { 
+            els.modalLaunch.style.display = 'none'; 
+            await refreshData(); 
+            notify(`Currency ${symbol} is now live!`, 'success');
+            document.getElementById('form-launch').reset();
+        } else {
+            notify(error.message, 'error');
+        }
     };
 }
 
