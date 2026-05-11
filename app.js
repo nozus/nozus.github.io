@@ -84,14 +84,13 @@ function generatePriceData(currency, range) {
     }));
 }
 
-function getSimulatedChange(currency) {
-    const data = generatePriceData(currency, '1D');
-    if (data.length < 2) return { change: 0, pct: 0 };
-    const open = data[0].value;
-    const close = data[data.length - 1].value;
+// Real change calculation: current price vs IPO price (10)
+function getRealChange(currency) {
+    const ipo = 10;
+    const current = currency.current_price;
     return {
-        change: parseFloat((close - open).toFixed(2)),
-        pct: parseFloat((((close - open) / open) * 100).toFixed(2))
+        change: parseFloat((current - ipo).toFixed(2)),
+        pct: parseFloat((((current - ipo) / ipo) * 100).toFixed(2))
     };
 }
 
@@ -215,7 +214,7 @@ function renderMarket() {
         return;
     }
     body.innerHTML = state.currencies.map(c => {
-        const { change, pct } = getSimulatedChange(c);
+        const { change, pct } = getRealChange(c);
         const pos = change >= 0;
         const cls = pos ? 'text-positive' : 'text-negative';
         const sign = pos ? '+' : '';
@@ -237,7 +236,7 @@ function renderMarket() {
             if (canvas) {
                 const data = generatePriceData(c, '1M');
                 const sampled = data.filter((_, i) => i % 6 === 0);
-                const { change } = getSimulatedChange(c);
+                const { change } = getRealChange(c);
                 drawSparkline(canvas, sampled, change >= 0);
             }
         });
@@ -279,7 +278,7 @@ function openDetail(currencyId) {
     $('trade-pps').innerText = c.current_price.toFixed(2) + ' pts';
     $('stat-ipo').innerText = '10.00';
 
-    const { change, pct } = getSimulatedChange(c);
+    const { change, pct } = getRealChange(c);
     const pos = change >= 0;
     const el = $('detail-change');
     el.innerText = `${pos ? '+' : ''}${change.toFixed(2)} (${pos ? '+' : ''}${pct.toFixed(2)}%)`;
@@ -305,7 +304,7 @@ function renderChart() {
     if (!c) return;
 
     const data = generatePriceData(c, state.selectedRange);
-    const { change } = getSimulatedChange(c);
+    const { change } = getRealChange(c);
     const pos = change >= 0;
     const lineColor = pos ? '#10b981' : '#ef4444';
     const topColor = pos ? 'rgba(16,185,129,0.25)' : 'rgba(239,68,68,0.2)';
@@ -352,15 +351,14 @@ function renderChart() {
     state.chart = chart;
     state.chartSeries = series;
 
-    // Stats
-    const vals = data.map(d => d.value);
-    $('stat-open').innerText = vals[0].toFixed(2);
-    $('stat-high').innerText = Math.max(...vals).toFixed(2);
-    $('stat-low').innerText = Math.min(...vals).toFixed(2);
-
-    const simVol = Math.floor(hashStr(c.id + 'vol') % 50000 + 5000);
-    $('stat-volume').innerText = simVol.toLocaleString();
-    $('stat-mcap').innerText = (c.current_price * 1000000).toLocaleString() + ' pts';
+    // Stats — real data only
+    $('stat-ipo').innerText = '10.00';
+    $('stat-price').innerText = c.current_price.toFixed(2);
+    const { pct } = getRealChange(c);
+    const returnEl = $('stat-return');
+    returnEl.innerText = (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%';
+    returnEl.style.color = pct >= 0 ? 'var(--accent)' : 'var(--danger)';
+    $('stat-holdings').innerText = (state.holdings[c.id] || 0) + ' shares';
 
     // Resize
     const resizeObserver = new ResizeObserver(() => {
@@ -376,7 +374,7 @@ function updateTicker() {
     const container = $('ticker-data');
     if (!container) return;
     const items = state.currencies.slice(0, 8).map(c => {
-        const { change } = getSimulatedChange(c);
+        const { change } = getRealChange(c);
         const pos = change >= 0;
         const color = pos ? 'var(--accent)' : 'var(--danger)';
         return `<span style="margin-right: 2rem;">${c.symbol} <b style="color: ${color}">${c.current_price.toFixed(2)}</b></span>`;

@@ -42,7 +42,7 @@ export function renderIcon(iconId, size = 48, locked = false) {
     const icon = ICONS[iconId] || ICONS['nozus_default'];
     const r = RARITY_COLORS[icon.rarity] || RARITY_COLORS.common;
     const isText = !icon.symbol.match(/[\u{1F000}-\u{1FFFF}]/u) && icon.symbol.length <= 3;
-    const fontSize = isText ? (size * 0.4) + 'px' : (size * 0.45) + 'px';
+    const fontSize = isText ? (size * 0.55) + 'px' : (size * 0.45) + 'px';
     const fontWeight = isText ? '800' : '400';
     const fontFamily = isText ? "'Plus Jakarta Sans', sans-serif" : 'inherit';
     const letterSpacing = isText ? '-1.5px' : '0';
