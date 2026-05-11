@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nozus | The Personal Currency Exchange</title>
+    <meta name="description" content="Launch your own currency and invest in others. The future of personal equity is here.">
+    <link rel="stylesheet" href="style.css">
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="glass">
+            <div class="logo">NOZUS</div>
+            <nav id="nav-actions">
+                <button id="btn-login" class="btn btn-secondary"><i data-lucide="log-in"></i> Sign In</button>
+                <div id="user-info" style="display: none;" class="flex align-center gap-1">
+                    <span id="user-points" class="btn btn-secondary"><i data-lucide="coins"></i> 0 pts</span>
+                    <button id="btn-create" class="btn btn-primary"><i data-lucide="plus-circle"></i> Launch Token</button>
+                </div>
+            </nav>
+        </header>
+
+        <main>
+            <section class="hero animate-fade-in">
+                <h1>Invest in <span>People</span></h1>
+                <p>The first decentralized stock market for individual talent and personal brands. Create your currency, build your value, and grow together.</p>
+                <div class="flex justify-center gap-1">
+                    <button class="btn btn-primary btn-lg">Explore Market</button>
+                    <button class="btn btn-secondary btn-lg">How it Works</button>
+                </div>
+            </section>
+
+            <section id="market-section">
+                <div class="flex justify-between align-center">
+                    <h2>Market Overview</h2>
+                    <div class="flex gap-1">
+                        <input type="text" id="search-market" placeholder="Search tokens..." class="glass">
+                    </div>
+                </div>
+                
+                <div id="market-grid" class="market-grid">
+                    <!-- Dynamic Content -->
+                    <div class="glass-card animate-pulse" style="height: 200px;"></div>
+                    <div class="glass-card animate-pulse" style="height: 200px;"></div>
+                    <div class="glass-card animate-pulse" style="height: 200px;"></div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="modal-auth" class="modal-overlay">
+        <div class="modal glass-card">
+            <h2 id="auth-title">Sign In to Nozus</h2>
+            <p class="text-muted mb-2">Connect with your community and start investing.</p>
+            <form id="form-auth">
+                <div class="input-group">
+                    <label>Email Address</label>
+                    <input type="email" id="auth-email" required placeholder="name@example.com">
+                </div>
+                <div class="input-group">
+                    <label>Password</label>
+                    <input type="password" id="auth-password" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-full">Continue</button>
+                <p class="text-center mt-1 text-sm">
+                    <a href="#" id="toggle-auth" class="text-primary">Don't have an account? Sign Up</a>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-create" class="modal-overlay">
+        <div class="modal glass-card">
+            <h2>Launch Your Token</h2>
+            <p class="text-muted mb-2">Define your currency and set your initial supply.</p>
+            <form id="form-create">
+                <div class="input-group">
+                    <label>Token Name</label>
+                    <input type="text" id="token-name" required placeholder="e.g. Alex Coin">
+                </div>
+                <div class="input-group">
+                    <label>Symbol (3-4 chars)</label>
+                    <input type="text" id="token-symbol" required placeholder="ALEX">
+                </div>
+                <div class="input-group">
+                    <label>Description</label>
+                    <textarea id="token-desc" rows="3" placeholder="What does this token represent?"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary w-full">Create Token</button>
+                <button type="button" class="btn btn-secondary w-full mt-1 btn-close">Cancel</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-trade" class="modal-overlay">
+        <div class="modal glass-card">
+            <h2 id="trade-token-name">Buy Token</h2>
+            <div class="flex justify-between mb-2">
+                <span class="text-muted">Current Price</span>
+                <span id="trade-current-price" class="font-bold">10 pts</span>
+            </div>
+            <div class="input-group">
+                <label>Amount to Buy</label>
+                <input type="number" id="trade-amount" min="1" value="1">
+            </div>
+            <div class="flex justify-between mb-2">
+                <span class="text-muted">Total Cost</span>
+                <span id="trade-total-cost" class="font-bold">10 pts</span>
+            </div>
+            <button id="btn-confirm-trade" class="btn btn-primary w-full">Confirm Investment</button>
+            <button type="button" class="btn btn-secondary w-full mt-1 btn-close">Cancel</button>
+        </div>
+    </div>
+
+    <script type="module" src="app.js"></script>
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+    </script>
+</body>
+</html>
