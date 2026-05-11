@@ -8,6 +8,75 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .file-upload-zone {
+            position: relative;
+            border: 2px dashed var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            background: var(--bg-page);
+        }
+        .file-upload-zone:hover {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+        .file-upload-zone.has-file {
+            border-color: var(--accent);
+            border-style: solid;
+        }
+        .file-upload-zone input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .file-upload-zone .upload-label {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+        .file-upload-zone .upload-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-dim);
+        }
+        .file-upload-zone .file-name {
+            font-size: 0.75rem;
+            color: var(--accent);
+            font-weight: 700;
+            margin-top: 0.25rem;
+        }
+        .upload-preview {
+            width: 100%;
+            max-height: 120px;
+            object-fit: cover;
+            border-radius: 12px;
+            margin-top: 0.75rem;
+            display: none;
+        }
+        .saving-indicator {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 0.875rem;
+        }
+        .saving-indicator.active { display: flex; }
+        .spinner {
+            width: 18px; height: 18px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
 </head>
 <body>
     <div class="app-wrapper">
@@ -38,10 +107,10 @@
         </aside>
 
         <main class="main-content">
-            <div id="profile-banner-display" style="height: 200px; background: #e2e8f0; border-radius: var(--radius-lg); margin-bottom: -50px; background-size: cover; background-position: center;"></div>
+            <div id="profile-banner-display" style="height: 200px; background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); border-radius: var(--radius-lg); margin-bottom: -50px; background-size: cover; background-position: center; transition: background-image 0.3s ease;"></div>
             
             <div class="flex align-end gap-2 mb-3" style="padding: 0 2rem;">
-                <div id="profile-avatar-display" style="width: 120px; height: 120px; border-radius: 50%; border: 6px solid #fff; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 3rem; font-weight: 800; background-size: cover; background-position: center;">
+                <div id="profile-avatar-display" style="width: 120px; height: 120px; border-radius: 50%; border: 6px solid #fff; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 3rem; font-weight: 800; background-size: cover; background-position: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
                     U
                 </div>
                 <div class="mb-1">
@@ -55,18 +124,30 @@
                     <h3 class="mb-2">Edit Identity</h3>
                     <form id="form-profile-update">
                         <div class="input-field">
-                            <label>Display Bio</label>
-                            <input type="text" id="set-bio" placeholder="e.g. Trading personal equity since 2026.">
+                            <label>Profile Picture</label>
+                            <div class="file-upload-zone" id="avatar-zone">
+                                <div class="upload-icon">📷</div>
+                                <div class="upload-label">Click or drag to upload avatar</div>
+                                <div class="file-name" id="avatar-file-name"></div>
+                                <img class="upload-preview" id="avatar-preview">
+                                <input type="file" id="set-avatar" accept="image/*">
+                            </div>
                         </div>
                         <div class="input-field">
-                            <label>Avatar Image URL</label>
-                            <input type="text" id="set-avatar" placeholder="https://...">
+                            <label>Profile Banner</label>
+                            <div class="file-upload-zone" id="banner-zone">
+                                <div class="upload-icon">🖼️</div>
+                                <div class="upload-label">Click or drag to upload banner</div>
+                                <div class="file-name" id="banner-file-name"></div>
+                                <img class="upload-preview" id="banner-preview">
+                                <input type="file" id="set-banner" accept="image/*">
+                            </div>
                         </div>
-                        <div class="input-field">
-                            <label>Profile Banner URL</label>
-                            <input type="text" id="set-banner" placeholder="https://...">
+                        <div class="saving-indicator" id="saving-indicator">
+                            <div class="spinner"></div>
+                            <span>Uploading...</span>
                         </div>
-                        <button type="submit" class="btn btn-primary w-full">Save Changes</button>
+                        <button type="submit" id="btn-save" class="btn btn-primary w-full">Save Changes</button>
                     </form>
                 </div>
 
@@ -106,9 +187,6 @@
                 document.getElementById('profile-username').innerText = profile.username;
                 document.getElementById('profile-points').innerText = `${profile.points} pts`;
                 document.getElementById('stat-points').innerText = `${profile.points} pts`;
-                document.getElementById('set-bio').value = profile.bio || '';
-                document.getElementById('set-avatar').value = profile.avatar_url || '';
-                document.getElementById('set-banner').value = profile.banner_url || '';
 
                 if (profile.avatar_url) {
                     document.getElementById('profile-avatar-display').style.backgroundImage = `url(${profile.avatar_url})`;
@@ -126,25 +204,103 @@
             }
         }
 
+        // Upload a file to Supabase Storage
+        async function uploadFile(file, bucket, path) {
+            const { data, error } = await supabase.storage.from(bucket).upload(path, file, {
+                cacheControl: '3600',
+                upsert: true
+            });
+            if (error) throw error;
+            const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(path);
+            // Append cache-busting param so browser shows new image
+            return urlData.publicUrl + '?t=' + Date.now();
+        }
+
         function setupListeners() {
             document.getElementById('btn-logout').onclick = async () => {
                 await supabase.auth.signOut();
                 window.location.href = 'auth.html';
             };
 
+            // File input preview handlers
+            document.getElementById('set-avatar').onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    document.getElementById('avatar-zone').classList.add('has-file');
+                    document.getElementById('avatar-file-name').innerText = file.name;
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        const preview = document.getElementById('avatar-preview');
+                        preview.src = ev.target.result;
+                        preview.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+
+            document.getElementById('set-banner').onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    document.getElementById('banner-zone').classList.add('has-file');
+                    document.getElementById('banner-file-name').innerText = file.name;
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        const preview = document.getElementById('banner-preview');
+                        preview.src = ev.target.result;
+                        preview.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+
             document.getElementById('form-profile-update').onsubmit = async (e) => {
                 e.preventDefault();
-                const updates = {
-                    bio: document.getElementById('set-bio').value,
-                    avatar_url: document.getElementById('set-avatar').value,
-                    banner_url: document.getElementById('set-banner').value
-                };
-                const { error } = await supabase.from('profiles').update(updates).eq('id', user.id);
-                if (!error) {
-                    alert("Profile updated!");
+                const btn = document.getElementById('btn-save');
+                const indicator = document.getElementById('saving-indicator');
+                btn.disabled = true;
+                btn.style.display = 'none';
+                indicator.classList.add('active');
+
+                try {
+                    const updates = {};
+                    const avatarFile = document.getElementById('set-avatar').files[0];
+                    const bannerFile = document.getElementById('set-banner').files[0];
+
+                    if (avatarFile) {
+                        const ext = avatarFile.name.split('.').pop();
+                        const path = `${user.id}/avatar.${ext}`;
+                        updates.avatar_url = await uploadFile(avatarFile, 'avatars', path);
+                    }
+
+                    if (bannerFile) {
+                        const ext = bannerFile.name.split('.').pop();
+                        const path = `${user.id}/banner.${ext}`;
+                        updates.banner_url = await uploadFile(bannerFile, 'avatars', path);
+                    }
+
+                    if (Object.keys(updates).length > 0) {
+                        const { error } = await supabase.from('profiles').update(updates).eq('id', user.id);
+                        if (error) throw error;
+                    }
+
                     await refresh();
-                } else {
-                    alert(error.message);
+                    // Reset file inputs
+                    document.getElementById('set-avatar').value = '';
+                    document.getElementById('set-banner').value = '';
+                    document.getElementById('avatar-zone').classList.remove('has-file');
+                    document.getElementById('banner-zone').classList.remove('has-file');
+                    document.getElementById('avatar-file-name').innerText = '';
+                    document.getElementById('banner-file-name').innerText = '';
+                    document.getElementById('avatar-preview').style.display = 'none';
+                    document.getElementById('banner-preview').style.display = 'none';
+
+                    alert("Profile updated!");
+                } catch (err) {
+                    alert("Upload failed: " + err.message);
+                } finally {
+                    btn.disabled = false;
+                    btn.style.display = '';
+                    indicator.classList.remove('active');
                 }
             };
         }
