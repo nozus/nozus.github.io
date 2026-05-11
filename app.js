@@ -1,4 +1,5 @@
 import { supabase } from './supabase-client.js';
+import { renderIcon } from './icons.js';
 
 // ============================
 // STATE
@@ -252,7 +253,12 @@ function renderLeaderboard() {
     body.innerHTML = state.leaderboard.map((u, i) => `
         <tr>
             <td><span class="rank-badge rank-${i < 3 ? i + 1 : 'other'}">#${i + 1}</span></td>
-            <td class="font-bold">${u.username}</td>
+            <td>
+                <div class="flex align-center gap-1">
+                    ${renderIcon(u.equipped_icon || 'nozus_default', 32)}
+                    <span class="font-bold">${u.username}</span>
+                </div>
+            </td>
             <td class="font-bold" style="text-align:right">${u.points.toLocaleString()} pts</td>
         </tr>
     `).join('');
@@ -386,14 +392,9 @@ function updateUserUI() {
     $('user-display').style.display = 'flex';
     $('nav-username').innerText = state.profile.username;
     $('user-points').innerText = `${state.profile.points.toLocaleString()} pts`;
-    if (state.profile.avatar_url) {
-        $('nav-avatar').src = state.profile.avatar_url;
-        $('nav-avatar').style.display = 'block';
-        $('nav-initials').style.display = 'none';
-    } else {
-        $('nav-avatar').style.display = 'none';
-        $('nav-initials').style.display = 'flex';
-        $('nav-initials').innerText = state.profile.username[0].toUpperCase();
+    const iconSlot = $('nav-icon-slot');
+    if (iconSlot) {
+        iconSlot.innerHTML = renderIcon(state.profile.equipped_icon || 'nozus_default', 32);
     }
 }
 

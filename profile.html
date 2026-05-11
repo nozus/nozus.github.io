@@ -8,75 +8,6 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        .file-upload-zone {
-            position: relative;
-            border: 2px dashed var(--border);
-            border-radius: 16px;
-            padding: 2rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.25s ease;
-            background: var(--bg-page);
-        }
-        .file-upload-zone:hover {
-            border-color: var(--primary);
-            background: var(--primary-light);
-        }
-        .file-upload-zone.has-file {
-            border-color: var(--accent);
-            border-style: solid;
-        }
-        .file-upload-zone input[type="file"] {
-            position: absolute;
-            inset: 0;
-            opacity: 0;
-            cursor: pointer;
-        }
-        .file-upload-zone .upload-label {
-            font-weight: 600;
-            color: var(--text-muted);
-            font-size: 0.875rem;
-        }
-        .file-upload-zone .upload-icon {
-            font-size: 1.5rem;
-            margin-bottom: 0.5rem;
-            color: var(--text-dim);
-        }
-        .file-upload-zone .file-name {
-            font-size: 0.75rem;
-            color: var(--accent);
-            font-weight: 700;
-            margin-top: 0.25rem;
-        }
-        .upload-preview {
-            width: 100%;
-            max-height: 120px;
-            object-fit: cover;
-            border-radius: 12px;
-            margin-top: 0.75rem;
-            display: none;
-        }
-        .saving-indicator {
-            display: none;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            padding: 0.75rem;
-            font-weight: 600;
-            color: var(--primary);
-            font-size: 0.875rem;
-        }
-        .saving-indicator.active { display: flex; }
-        .spinner {
-            width: 18px; height: 18px;
-            border: 3px solid var(--border);
-            border-top-color: var(--primary);
-            border-radius: 50%;
-            animation: spin 0.6s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-    </style>
 </head>
 <body>
     <div class="app-wrapper">
@@ -84,8 +15,7 @@
             <div class="logo">nozus.</div>
             <div class="user-pill" id="user-display">
                 <div class="flex align-center gap-1">
-                    <img id="nav-avatar" src="" style="width: 32px; height: 32px; border-radius: 50%; display: none;">
-                    <div id="nav-initials" class="btn" style="width: 32px; height: 32px; border-radius: 50%; background: var(--border); font-size: 12px;">U</div>
+                    <div id="nav-icon-slot"></div>
                     <span id="nav-username" class="font-bold">Username</span>
                 </div>
             </div>
@@ -107,55 +37,43 @@
         </aside>
 
         <main class="main-content">
-            <div id="profile-banner-display" style="height: 200px; background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); border-radius: var(--radius-lg); margin-bottom: -50px; background-size: cover; background-position: center; transition: background-image 0.3s ease;"></div>
-            
-            <div class="flex align-end gap-2 mb-3" style="padding: 0 2rem;">
-                <div id="profile-avatar-display" style="width: 120px; height: 120px; border-radius: 50%; border: 6px solid #fff; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 3rem; font-weight: 800; background-size: cover; background-position: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-                    U
-                </div>
-                <div class="mb-1">
-                    <h1 id="profile-username" style="font-size: 2.5rem; letter-spacing: -1px;">Username</h1>
-                    <p id="profile-points" class="text-muted font-bold">1,000 pts</p>
-                </div>
+            <!-- Profile Header -->
+            <div class="profile-hero">
+                <div id="profile-icon-display"></div>
+                <h1 id="profile-username" class="profile-name">Username</h1>
+                <p id="profile-points" class="text-muted font-bold">1,000 pts</p>
             </div>
 
             <div class="grid" style="grid-template-columns: 1fr 300px; gap: 2rem;">
+                <!-- Icon Collection -->
                 <div class="card">
-                    <h3 class="mb-2">Edit Identity</h3>
-                    <form id="form-profile-update">
-                        <div class="input-field">
-                            <label>Profile Picture</label>
-                            <div class="file-upload-zone" id="avatar-zone">
-                                <div class="upload-icon">📷</div>
-                                <div class="upload-label">Click or drag to upload avatar</div>
-                                <div class="file-name" id="avatar-file-name"></div>
-                                <img class="upload-preview" id="avatar-preview">
-                                <input type="file" id="set-avatar" accept="image/*">
-                            </div>
-                        </div>
-                        <div class="input-field">
-                            <label>Profile Banner</label>
-                            <div class="file-upload-zone" id="banner-zone">
-                                <div class="upload-icon">🖼️</div>
-                                <div class="upload-label">Click or drag to upload banner</div>
-                                <div class="file-name" id="banner-file-name"></div>
-                                <img class="upload-preview" id="banner-preview">
-                                <input type="file" id="set-banner" accept="image/*">
-                            </div>
-                        </div>
-                        <div class="saving-indicator" id="saving-indicator">
-                            <div class="spinner"></div>
-                            <span>Uploading...</span>
-                        </div>
-                        <button type="submit" id="btn-save" class="btn btn-primary w-full">Save Changes</button>
-                    </form>
+                    <h3 class="mb-1">Icon Collection</h3>
+                    <p class="text-muted text-xs mb-2">Tap an unlocked icon to equip it.</p>
+                    
+                    <div id="icon-section-common"></div>
+                    <div id="icon-section-rare"></div>
+                    <div id="icon-section-epic"></div>
+                    <div id="icon-section-legendary"></div>
                 </div>
 
-                <div class="card">
-                    <h3 class="mb-2">Stats</h3>
-                    <div class="p-1 mb-1" style="background: var(--bg-page); border-radius: 12px;">
-                        <p class="text-xs text-dim uppercase font-bold">Total Wealth</p>
-                        <p id="stat-points" class="font-bold" style="font-size: 1.5rem;">1,000 pts</p>
+                <!-- Stats -->
+                <div>
+                    <div class="card mb-2">
+                        <h3 class="mb-2">Stats</h3>
+                        <div class="p-1 mb-1" style="background: var(--bg-page); border-radius: 12px;">
+                            <p class="text-xs text-dim uppercase font-bold">Total Wealth</p>
+                            <p id="stat-points" class="font-bold" style="font-size: 1.5rem;">1,000 pts</p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h3 class="mb-2">Equipped</h3>
+                        <div class="flex align-center gap-1" id="equipped-display">
+                            <div id="equipped-icon-slot"></div>
+                            <div>
+                                <p id="equipped-name" class="font-bold">nozus. OG</p>
+                                <p id="equipped-rarity" class="text-xs" style="text-transform: uppercase; letter-spacing: 0.05em;">Common</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -164,15 +82,13 @@
 
     <script type="module">
         import { supabase } from './supabase-client.js';
+        import { ICONS, RARITY_COLORS, RARITY_LABELS, renderIcon } from './icons.js';
 
         let user, profile;
 
         async function init() {
             const { data } = await supabase.auth.getUser();
-            if (!data.user) {
-                window.location.href = 'auth.html';
-                return;
-            }
+            if (!data.user) { window.location.href = 'auth.html'; return; }
             user = data.user;
             await refresh();
             setupListeners();
@@ -181,54 +97,70 @@
 
         async function refresh() {
             let { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-
-            // Auto-create profile if it doesn't exist
             if (!data) {
                 const username = user.user_metadata?.username || 'user_' + user.id.substring(0, 8);
-                const { data: newProfile, error: insertErr } = await supabase.from('profiles')
-                    .insert([{ id: user.id, username: username, points: 1000 }])
-                    .select()
-                    .single();
-                if (insertErr) {
-                    console.error("Could not create profile:", insertErr.message);
-                    return;
-                }
-                data = newProfile;
+                const { data: np } = await supabase.from('profiles')
+                    .insert([{ id: user.id, username: username, points: 1000, equipped_icon: 'nozus_default' }])
+                    .select().single();
+                data = np;
             }
+            if (!data) return;
+            profile = data;
 
-            if (data) {
-                profile = data;
-                document.getElementById('nav-username').innerText = profile.username;
-                document.getElementById('profile-username').innerText = profile.username;
-                document.getElementById('profile-points').innerText = `${profile.points} pts`;
-                document.getElementById('stat-points').innerText = `${profile.points} pts`;
+            // Nav
+            document.getElementById('nav-username').innerText = profile.username;
+            const equippedId = profile.equipped_icon || 'nozus_default';
+            document.getElementById('nav-icon-slot').innerHTML = renderIcon(equippedId, 32);
 
-                if (profile.avatar_url) {
-                    document.getElementById('profile-avatar-display').style.backgroundImage = `url(${profile.avatar_url})`;
-                    document.getElementById('profile-avatar-display').innerText = '';
-                    document.getElementById('nav-avatar').src = profile.avatar_url;
-                    document.getElementById('nav-avatar').style.display = 'block';
-                    document.getElementById('nav-initials').style.display = 'none';
-                } else {
-                    document.getElementById('profile-avatar-display').innerText = profile.username[0].toUpperCase();
-                }
+            // Profile hero
+            document.getElementById('profile-icon-display').innerHTML = renderIcon(equippedId, 100);
+            document.getElementById('profile-username').innerText = profile.username;
+            document.getElementById('profile-points').innerText = `${profile.points.toLocaleString()} pts`;
+            document.getElementById('stat-points').innerText = `${profile.points.toLocaleString()} pts`;
 
-                if (profile.banner_url) {
-                    document.getElementById('profile-banner-display').style.backgroundImage = `url(${profile.banner_url})`;
-                }
-            }
+            // Equipped card
+            const eIcon = ICONS[equippedId] || ICONS['nozus_default'];
+            document.getElementById('equipped-icon-slot').innerHTML = renderIcon(equippedId, 56);
+            document.getElementById('equipped-name').innerText = eIcon.name;
+            document.getElementById('equipped-rarity').innerText = RARITY_LABELS[eIcon.rarity];
+            document.getElementById('equipped-rarity').style.color = RARITY_COLORS[eIcon.rarity];
+
+            // Render icon collection
+            renderIconGrid();
         }
 
-        // Upload a file to Supabase Storage
-        async function uploadFile(file, bucket, path) {
-            const { data, error } = await supabase.storage.from(bucket).upload(path, file, {
-                cacheControl: '3600',
-                upsert: true
-            });
-            if (error) throw error;
-            const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(path);
-            // Append cache-busting param so browser shows new image
-            return urlData.publicUrl + '?t=' + Date.now();
+        function renderIconGrid() {
+            const groups = { common: [], rare: [], epic: [], legendary: [] };
+            for (const [id, icon] of Object.entries(ICONS)) {
+                groups[icon.rarity].push({ id, ...icon });
+            }
+
+            for (const [rarity, icons] of Object.entries(groups)) {
+                const section = document.getElementById(`icon-section-${rarity}`);
+                if (!section || icons.length === 0) continue;
+                const equipped = profile.equipped_icon || 'nozus_default';
+                section.innerHTML = `
+                    <div class="icon-rarity-header" style="color: ${RARITY_COLORS[rarity]}">
+                        <span class="rarity-dot" style="background: ${RARITY_COLORS[rarity]}"></span>
+                        ${RARITY_LABELS[rarity]}
+                    </div>
+                    <div class="icon-grid">
+                        ${icons.map(ic => {
+                            const locked = !ic.free;
+                            const isEquipped = ic.id === equipped;
+                            return `
+                                <div class="icon-cell ${locked ? 'locked' : 'unlocked'} ${isEquipped ? 'equipped' : ''}"
+                                     data-icon-id="${ic.id}" ${!locked ? 'style="cursor:pointer"' : ''}>
+                                    ${renderIcon(ic.id, 56, locked)}
+                                    <span class="icon-cell-name">${ic.name}</span>
+                                    ${isEquipped ? '<span class="equipped-badge">EQUIPPED</span>' : ''}
+                                    ${locked ? '<span class="locked-badge">LOCKED</span>' : ''}
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+            }
         }
 
         function setupListeners() {
@@ -237,87 +169,17 @@
                 window.location.href = 'auth.html';
             };
 
-            // File input preview handlers
-            document.getElementById('set-avatar').onchange = (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    document.getElementById('avatar-zone').classList.add('has-file');
-                    document.getElementById('avatar-file-name').innerText = file.name;
-                    const reader = new FileReader();
-                    reader.onload = (ev) => {
-                        const preview = document.getElementById('avatar-preview');
-                        preview.src = ev.target.result;
-                        preview.style.display = 'block';
-                    };
-                    reader.readAsDataURL(file);
-                }
-            };
+            // Equip icon on click
+            document.addEventListener('click', async (e) => {
+                const cell = e.target.closest('.icon-cell.unlocked');
+                if (!cell) return;
+                const iconId = cell.dataset.iconId;
+                if (!iconId || iconId === profile.equipped_icon) return;
 
-            document.getElementById('set-banner').onchange = (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    document.getElementById('banner-zone').classList.add('has-file');
-                    document.getElementById('banner-file-name').innerText = file.name;
-                    const reader = new FileReader();
-                    reader.onload = (ev) => {
-                        const preview = document.getElementById('banner-preview');
-                        preview.src = ev.target.result;
-                        preview.style.display = 'block';
-                    };
-                    reader.readAsDataURL(file);
-                }
-            };
-
-            document.getElementById('form-profile-update').onsubmit = async (e) => {
-                e.preventDefault();
-                const btn = document.getElementById('btn-save');
-                const indicator = document.getElementById('saving-indicator');
-                btn.disabled = true;
-                btn.style.display = 'none';
-                indicator.classList.add('active');
-
-                try {
-                    const updates = {};
-                    const avatarFile = document.getElementById('set-avatar').files[0];
-                    const bannerFile = document.getElementById('set-banner').files[0];
-
-                    if (avatarFile) {
-                        const ext = avatarFile.name.split('.').pop();
-                        const path = `${user.id}/avatar.${ext}`;
-                        updates.avatar_url = await uploadFile(avatarFile, 'avatars', path);
-                    }
-
-                    if (bannerFile) {
-                        const ext = bannerFile.name.split('.').pop();
-                        const path = `${user.id}/banner.${ext}`;
-                        updates.banner_url = await uploadFile(bannerFile, 'avatars', path);
-                    }
-
-                    if (Object.keys(updates).length > 0) {
-                        const { error } = await supabase.from('profiles').update(updates).eq('id', user.id);
-                        if (error) throw error;
-                    }
-
-                    await refresh();
-                    // Reset file inputs
-                    document.getElementById('set-avatar').value = '';
-                    document.getElementById('set-banner').value = '';
-                    document.getElementById('avatar-zone').classList.remove('has-file');
-                    document.getElementById('banner-zone').classList.remove('has-file');
-                    document.getElementById('avatar-file-name').innerText = '';
-                    document.getElementById('banner-file-name').innerText = '';
-                    document.getElementById('avatar-preview').style.display = 'none';
-                    document.getElementById('banner-preview').style.display = 'none';
-
-                    alert("Profile updated!");
-                } catch (err) {
-                    alert("Upload failed: " + err.message);
-                } finally {
-                    btn.disabled = false;
-                    btn.style.display = '';
-                    indicator.classList.remove('active');
-                }
-            };
+                const { error } = await supabase.from('profiles').update({ equipped_icon: iconId }).eq('id', user.id);
+                if (error) { alert(error.message); return; }
+                await refresh();
+            });
         }
 
         init();

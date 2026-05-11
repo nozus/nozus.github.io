@@ -42,40 +42,11 @@ CREATE TRIGGER on_auth_user_created
     EXECUTE FUNCTION public.handle_new_user();
 
 -- ============================================
--- 6. STORAGE RLS POLICIES for the 'avatars' bucket
--- These allow authenticated users to upload/update/read
--- their own files (stored under their user ID folder).
+-- 6. Allow authenticated users to update currency prices
+-- (needed for trade-driven price changes)
 -- ============================================
-
--- Allow authenticated users to upload files into their own folder
-CREATE POLICY "Users can upload their own avatars"
-ON storage.objects FOR INSERT
+CREATE POLICY "Authenticated users can update currencies"
+ON public.currencies FOR UPDATE
 TO authenticated
-WITH CHECK (
-    bucket_id = 'avatars'
-    AND (storage.foldername(name))[1] = auth.uid()::text
-);
+USING (true);
 
--- Allow authenticated users to update/overwrite their own files
-CREATE POLICY "Users can update their own avatars"
-ON storage.objects FOR UPDATE
-TO authenticated
-USING (
-    bucket_id = 'avatars'
-    AND (storage.foldername(name))[1] = auth.uid()::text
-);
-
--- Allow anyone to read avatar files (public profile images)
-CREATE POLICY "Avatar images are publicly accessible"
-ON storage.objects FOR SELECT
-TO public
-USING (bucket_id = 'avatars');
-
--- Allow users to delete their own avatar files
-CREATE POLICY "Users can delete their own avatars"
-ON storage.objects FOR DELETE
-TO authenticated
-USING (
-    bucket_id = 'avatars'
-    AND (storage.foldername(name))[1] = auth.uid()::text
-);
