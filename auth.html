@@ -282,6 +282,10 @@
                 if (message.includes("confirmation")) {
                     message = "<b>SIGNUP FAILED:</b> Email confirmation is enabled in your Supabase settings.<br><br>";
                     message += "To fix this, go to your <b>Supabase Dashboard</b> > <b>Authentication</b> > <b>Settings</b> and <b>uncheck</b> 'Confirm email'.";
+                } else if (message.includes("rate limit")) {
+                    message = "<b>RATE LIMIT EXCEEDED:</b> You are creating accounts too fast.<br><br>";
+                    message += "1. Wait 60 seconds and try again.<br>";
+                    message += "2. To fix this permanently: Go to your <b>Supabase Dashboard</b> > <b>Authentication</b> > <b>Settings</b> and increase the 'Rate Limits' (e.g., set 'Max Signups per hour' to 100).";
                 }
                 
                 els.errorDisplay.innerHTML = message;
