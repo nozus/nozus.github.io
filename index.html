@@ -204,6 +204,21 @@
         </div>
     </div>
 
+    <!-- Delete Confirmation Modal -->
+    <div id="modal-confirm-delete" class="modal-overlay">
+        <div class="modal card" style="width: 100%; max-width: 400px; margin: auto;">
+            <div class="text-center mb-2">
+                <i data-lucide="alert-triangle" style="width: 48px; height: 48px; color: var(--danger); margin-bottom: 1rem;"></i>
+                <h3 class="mb-1">Delete Currency?</h3>
+                <p class="text-muted text-xs">This will permanently delete the currency and all its trade history. This action cannot be undone.</p>
+            </div>
+            <div class="flex gap-1">
+                <button id="btn-confirm-delete-yes" class="btn btn-sell w-full">Delete Forever</button>
+                <button id="btn-confirm-delete-no" class="btn btn-ghost w-full btn-close">Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module" src="app.js"></script>
     <script>lucide.createIcons();</script>
 </body>

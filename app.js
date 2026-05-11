@@ -230,8 +230,12 @@ function openDetail(currencyId) {
 
     $('detail-symbol').innerText = c.symbol;
     $('detail-name').innerText = c.name;
+    
+    // Real market feel: Show Bid/Ask spread
+    const bid = (c.current_price * 0.999).toFixed(2);
+    const ask = (c.current_price * 1001 / 1000).toFixed(2);
     $('detail-price').innerText = c.current_price.toFixed(2);
-    $('trade-pps').innerText = c.current_price.toFixed(2) + ' pts';
+    $('trade-pps').innerText = ask + ' pts'; // Buy at Ask
 
     const { change, pct } = getRealChange(c);
     const pos = change >= 0;
@@ -314,6 +318,10 @@ async function renderChart() {
             borderColor: '#f1f5f9', 
             timeVisible: true,
             secondsVisible: false,
+            tickMarkFormatter: (time, tickMarkType, locale) => {
+                const date = new Date(time * 1000);
+                return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+            }
         },
         localization: {
             timeFormatter: timestamp => {
@@ -390,26 +398,29 @@ async function renderHistoryTable() {
 }
 
 async function deleteCurrency() {
+    $('modal-confirm-delete').style.display = 'flex';
+}
+
+async function executeDelete() {
     const c = state.selectedCurrency;
     if (!c) return;
     
-    if (confirm(`Are you sure you want to delete ${c.name} (${c.symbol})? This action cannot be undone.`)) {
-        try {
-            const { error } = await supabase.from('currencies').delete().eq('id', c.id);
-            if (error) throw error;
-            
-            // Remove from local state immediately for instant feedback
-            state.currencies = state.currencies.filter(curr => curr.id !== c.id);
-            state.selectedCurrency = null;
-            
-            notify(`${c.symbol} deleted successfully.`, 'success');
-            setView('market');
-            renderMarket(); // Re-render table without the deleted item
-            await refreshData(); // Sync with server
-        } catch (err) {
-            notify("Delete failed: " + err.message, 'error');
-            console.error("Deletion error:", err);
-        }
+    try {
+        const { error } = await supabase.from('currencies').delete().eq('id', c.id);
+        if (error) throw error;
+        
+        state.currencies = state.currencies.filter(curr => curr.id !== c.id);
+        state.selectedCurrency = null;
+        
+        notify(`${c.symbol} deleted successfully.`, 'success');
+        setView('market');
+        renderMarket();
+        $('modal-confirm-delete').style.display = 'none';
+        await refreshData();
+    } catch (err) {
+        notify("Delete failed: " + err.message, 'error');
+        console.error("Deletion error:", err);
+        $('modal-confirm-delete').style.display = 'none';
     }
 }
 
@@ -452,7 +463,11 @@ function updateTradeTotal() {
     const totalEl = $('trade-total');
     if (!sharesEl || !totalEl) return;
     const shares = parseInt(sharesEl.value) || 0;
-    totalEl.innerText = (shares * c.current_price).toFixed(2) + ' pts';
+    
+    const isBuy = state.tradeAction === 'buy';
+    const unitPrice = isBuy ? c.current_price * 1.001 : c.current_price * 0.999;
+    
+    totalEl.innerText = (shares * unitPrice).toFixed(2) + ' pts';
 }
 
 async function executeTrade() {
@@ -466,8 +481,9 @@ async function executeTrade() {
         if (state.profile.points < cost) return notify("Insufficient points", 'error');
 
         try {
-            // SLIPPAGE: Average price is slightly higher than current
-            const avgPrice = c.current_price * (1 + (shares * 0.0005)); 
+            // SLIPPAGE: Base spread (0.1%) + Volume impact (0.05% per share)
+            const spreadPrice = c.current_price * 1.001;
+            const avgPrice = spreadPrice * (1 + (shares * 0.0005)); 
             const totalCost = shares * avgPrice;
             
             if (state.profile.points < totalCost) return notify("Insufficient points for this order (including slippage)", 'error');
@@ -496,7 +512,8 @@ async function executeTrade() {
         if (owned < shares) return notify(`You only own ${owned} shares`, 'error');
 
         try {
-            const avgPrice = c.current_price * (1 - (shares * 0.0005));
+            const spreadPrice = c.current_price * 0.999;
+            const avgPrice = spreadPrice * (1 - (shares * 0.0005));
             const totalCredit = shares * avgPrice;
 
             await supabase.from('profiles').update({ points: state.profile.points + totalCredit }).eq('id', state.user.id);
@@ -605,6 +622,13 @@ function setupListeners() {
                 btn.innerText = state.tradeAction === 'buy' ? 'Place Buy Order' : 'Place Sell Order';
                 btn.className = state.tradeAction === 'buy' ? 'btn btn-primary w-full' : 'btn btn-sell w-full';
             }
+            updateTradeTotal();
+            const pps = $('trade-pps');
+            if (pps && state.selectedCurrency) {
+                const isBuy = state.tradeAction === 'buy';
+                const price = isBuy ? state.selectedCurrency.current_price * 1.001 : state.selectedCurrency.current_price * 0.999;
+                pps.innerText = price.toFixed(2) + ' pts';
+            }
         }
     });
 
@@ -631,6 +655,8 @@ function setupListeners() {
             renderChart();
         }
     });
+
+    $('btn-confirm-delete-yes')?.addEventListener('click', executeDelete);
 }
 
 // ============================
