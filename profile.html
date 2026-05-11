@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nozus | My Profile</title>
+    <link rel="icon" type="image/png" href="nozus_logo_favicon_1778476398592.png">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <div class="app-wrapper">
+        <header>
+            <div class="logo">nozus</div>
+            <div class="user-pill" id="user-display">
+                <div class="flex align-center gap-1">
+                    <img id="nav-avatar" src="" style="width: 32px; height: 32px; border-radius: 50%; display: none;">
+                    <div id="nav-initials" class="btn" style="width: 32px; height: 32px; border-radius: 50%; background: var(--border); font-size: 12px;">U</div>
+                    <span id="nav-username" class="font-bold">Username</span>
+                </div>
+            </div>
+        </header>
+
+        <aside class="sidebar">
+            <nav>
+                <a href="index.html" class="nav-link">
+                    <i data-lucide="layout-grid"></i> <span>Market</span>
+                </a>
+                <a href="profile.html" class="nav-link active">
+                    <i data-lucide="user"></i> <span>Profile</span>
+                </a>
+                <hr style="margin: 1rem 0; border: none; border-top: 1px solid var(--border);">
+                <button id="btn-logout" class="btn btn-ghost w-full" style="justify-content: flex-start; padding: 1rem;">
+                    <i data-lucide="log-out"></i> <span>Sign Out</span>
+                </button>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div id="profile-banner-display" style="height: 200px; background: #e2e8f0; border-radius: var(--radius-lg); margin-bottom: -50px; background-size: cover; background-position: center;"></div>
+            
+            <div class="flex align-end gap-2 mb-3" style="padding: 0 2rem;">
+                <div id="profile-avatar-display" style="width: 120px; height: 120px; border-radius: 50%; border: 6px solid #fff; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 3rem; font-weight: 800; background-size: cover; background-position: center;">
+                    U
+                </div>
+                <div class="mb-1">
+                    <h1 id="profile-username" style="font-size: 2.5rem; letter-spacing: -1px;">Username</h1>
+                    <p id="profile-points" class="text-muted font-bold">1,000 pts</p>
+                </div>
+            </div>
+
+            <div class="grid" style="grid-template-columns: 1fr 300px; gap: 2rem;">
+                <div class="card">
+                    <h3 class="mb-2">Edit Identity</h3>
+                    <form id="form-profile-update">
+                        <div class="input-field">
+                            <label>Display Bio</label>
+                            <input type="text" id="set-bio" placeholder="e.g. Trading personal equity since 2026.">
+                        </div>
+                        <div class="input-field">
+                            <label>Avatar Image URL</label>
+                            <input type="text" id="set-avatar" placeholder="https://...">
+                        </div>
+                        <div class="input-field">
+                            <label>Profile Banner URL</label>
+                            <input type="text" id="set-banner" placeholder="https://...">
+                        </div>
+                        <button type="submit" class="btn btn-primary w-full">Save Changes</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h3 class="mb-2">Stats</h3>
+                    <div class="p-1 mb-1" style="background: var(--bg-page); border-radius: 12px;">
+                        <p class="text-xs text-dim uppercase font-bold">Total Wealth</p>
+                        <p id="stat-points" class="font-bold" style="font-size: 1.5rem;">1,000 pts</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script type="module">
+        import { supabase } from './supabase-client.js';
+
+        let user, profile;
+
+        async function init() {
+            const { data } = await supabase.auth.getUser();
+            if (!data.user) {
+                window.location.href = 'auth.html';
+                return;
+            }
+            user = data.user;
+            await refresh();
+            setupListeners();
+            lucide.createIcons();
+        }
+
+        async function refresh() {
+            const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+            if (data) {
+                profile = data;
+                document.getElementById('nav-username').innerText = profile.username;
+                document.getElementById('profile-username').innerText = profile.username;
+                document.getElementById('profile-points').innerText = `${profile.points} pts`;
+                document.getElementById('stat-points').innerText = `${profile.points} pts`;
+                document.getElementById('set-bio').value = profile.bio || '';
+                document.getElementById('set-avatar').value = profile.avatar_url || '';
+                document.getElementById('set-banner').value = profile.banner_url || '';
+
+                if (profile.avatar_url) {
+                    document.getElementById('profile-avatar-display').style.backgroundImage = `url(${profile.avatar_url})`;
+                    document.getElementById('profile-avatar-display').innerText = '';
+                    document.getElementById('nav-avatar').src = profile.avatar_url;
+                    document.getElementById('nav-avatar').style.display = 'block';
+                    document.getElementById('nav-initials').style.display = 'none';
+                } else {
+                    document.getElementById('profile-avatar-display').innerText = profile.username[0].toUpperCase();
+                }
+
+                if (profile.banner_url) {
+                    document.getElementById('profile-banner-display').style.backgroundImage = `url(${profile.banner_url})`;
+                }
+            }
+        }
+
+        function setupListeners() {
+            document.getElementById('btn-logout').onclick = async () => {
+                await supabase.auth.signOut();
+                window.location.href = 'auth.html';
+            };
+
+            document.getElementById('form-profile-update').onsubmit = async (e) => {
+                e.preventDefault();
+                const updates = {
+                    bio: document.getElementById('set-bio').value,
+                    avatar_url: document.getElementById('set-avatar').value,
+                    banner_url: document.getElementById('set-banner').value
+                };
+                const { error } = await supabase.from('profiles').update(updates).eq('id', user.id);
+                if (!error) {
+                    alert("Profile updated!");
+                    await refresh();
+                } else {
+                    alert(error.message);
+                }
+            };
+        }
+
+        init();
+    </script>
+</body>
+</html>

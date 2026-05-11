@@ -157,99 +157,107 @@ function updateUI() {
 
 // Events
 function setupListeners() {
-    document.getElementById('view-market').onclick = () => setView('market');
-    document.getElementById('view-portfolio').onclick = () => setView('portfolio');
-    document.getElementById('view-leaderboard').onclick = () => setView('leaderboard');
+    const marketTrigger = document.getElementById('view-market');
+    if (marketTrigger) marketTrigger.onclick = () => setView('market');
     
-    document.getElementById('btn-launch').onclick = () => els.modalLaunch.style.display = 'flex';
-    document.getElementById('btn-settings').onclick = () => {
-        if (state.profile) {
-            document.getElementById('set-avatar').value = state.profile.avatar_url || '';
-            document.getElementById('set-banner').value = state.profile.banner_url || '';
-            els.modalSettings.style.display = 'flex';
-        }
-    };
+    const leaderboardTrigger = document.getElementById('view-leaderboard');
+    if (leaderboardTrigger) leaderboardTrigger.onclick = () => setView('leaderboard');
     
-    document.getElementById('btn-logout').onclick = async () => {
-        await supabase.auth.signOut();
-        window.location.href = 'auth.html';
-    };
+    const launchBtn = document.getElementById('btn-launch');
+    if (launchBtn) {
+        launchBtn.onclick = () => {
+            console.log("Opening launch modal...");
+            els.modalLaunch.style.display = 'flex';
+        };
+    }
+    
+    const logoutBtn = document.getElementById('btn-logout');
+    if (logoutBtn) {
+        logoutBtn.onclick = async () => {
+            await supabase.auth.signOut();
+            window.location.href = 'auth.html';
+        };
+    }
 
     document.querySelectorAll('.btn-close').forEach(b => {
         b.onclick = () => b.closest('.modal-overlay').style.display = 'none';
     });
 
-    document.getElementById('form-settings').onsubmit = async (e) => {
-        e.preventDefault();
-        const updates = {
-            avatar_url: document.getElementById('set-avatar').value,
-            banner_url: document.getElementById('set-banner').value
+    const launchForm = document.getElementById('form-launch');
+    if (launchForm) {
+        console.log("Attaching launch form listener...");
+        launchForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('launch-name').value.trim();
+            const symbol = document.getElementById('launch-symbol').value.trim().toUpperCase();
+            
+            console.log("Launching currency:", { name, symbol });
+
+            if (!/^[A-Z]{4}$/.test(symbol)) {
+                return notify("Ticker must be exactly 4 letters (A-Z).", 'error');
+            }
+
+            try {
+                const { data, error } = await supabase.from('currencies').insert([{
+                    creator_id: state.user.id,
+                    name: name,
+                    symbol: symbol,
+                    current_price: 10
+                }]).select();
+
+                if (error) throw error;
+
+                notify(`Currency ${symbol} launched successfully!`, 'success');
+                els.modalLaunch.style.display = 'none';
+                launchForm.reset();
+                await refreshData();
+            } catch (err) {
+                console.error("Launch error:", err);
+                notify(err.message, 'error');
+            }
         };
-        const { error } = await supabase.from('profiles').update(updates).eq('id', state.user.id);
-        if (!error) {
-            els.modalSettings.style.display = 'none';
-            await checkSession();
-            notify("Profile updated!");
-        } else notify(error.message, 'error');
-    };
+    } else {
+        console.error("Launch form NOT found in DOM!");
+    }
 
-    els.marketBody.onclick = (e) => {
-        const btn = e.target.closest('.btn-trade-trigger');
-        if (btn) {
-            const { id, name, price } = btn.dataset;
-            document.getElementById('trade-title').innerText = `Invest in ${name}`;
-            document.getElementById('trade-price').innerText = `${price} pts`;
-            els.modalTrade.dataset.id = id;
-            els.modalTrade.dataset.price = price;
-            els.modalTrade.style.display = 'flex';
-        }
-    };
-
-    document.getElementById('btn-confirm-trade').onclick = async () => {
-        const id = els.modalTrade.dataset.id;
-        const price = parseInt(els.modalTrade.dataset.price);
-        const amount = parseInt(document.getElementById('trade-amount').value);
-        const cost = price * amount;
-
-        if (state.profile.points < cost) return notify("Insufficient points", 'error');
-
-        const { error } = await supabase.from('profiles').update({ points: state.profile.points - cost }).eq('id', state.user.id);
-        if (!error) {
-            await supabase.from('transactions').insert([{ user_id: state.user.id, currency_id: id, type: 'buy', amount, price_at_time: price }]);
-            els.modalTrade.style.display = 'none';
-            await refreshData();
-            await checkSession();
-            notify(`Successfully invested in ${amount} shares!`, 'success');
-        } else notify(error.message, 'error');
-    };
-
-    document.getElementById('form-launch').onsubmit = async (e) => {
-        e.preventDefault();
-        const name = document.getElementById('launch-name').value.trim();
-        const symbol = document.getElementById('launch-symbol').value.trim().toUpperCase();
-        
-        // Ticker Validation: 4 letters, no numbers
-        if (!/^[A-Z]{4}$/.test(symbol)) {
-            return notify("Ticker must be exactly 4 letters (A-Z) and no numbers.", 'error');
-        }
-
-        const t = {
-            creator_id: state.user.id,
-            name: name,
-            symbol: symbol,
-            current_price: 10
+    if (els.marketBody) {
+        els.marketBody.onclick = (e) => {
+            const btn = e.target.closest('.btn-trade-trigger');
+            if (btn) {
+                const { id, name, price } = btn.dataset;
+                document.getElementById('trade-title').innerText = `Invest in ${name}`;
+                document.getElementById('trade-price').innerText = `${price} pts`;
+                els.modalTrade.dataset.id = id;
+                els.modalTrade.dataset.price = price;
+                els.modalTrade.style.display = 'flex';
+            }
         };
+    }
 
-        const { error } = await supabase.from('currencies').insert([t]);
-        if (!error) { 
-            els.modalLaunch.style.display = 'none'; 
-            await refreshData(); 
-            notify(`Currency ${symbol} is now live!`, 'success');
-            document.getElementById('form-launch').reset();
-        } else {
-            notify(error.message, 'error');
-        }
-    };
+    const tradeBtn = document.getElementById('btn-confirm-trade');
+    if (tradeBtn) {
+        tradeBtn.onclick = async () => {
+            const id = els.modalTrade.dataset.id;
+            const price = parseInt(els.modalTrade.dataset.price);
+            const amount = parseInt(document.getElementById('trade-amount').value);
+            const cost = price * amount;
+
+            if (state.profile.points < cost) return notify("Insufficient points", 'error');
+
+            try {
+                const { error } = await supabase.from('profiles').update({ points: state.profile.points - cost }).eq('id', state.user.id);
+                if (error) throw error;
+
+                await supabase.from('transactions').insert([{ user_id: state.user.id, currency_id: id, type: 'buy', amount, price_at_time: price }]);
+                els.modalTrade.style.display = 'none';
+                notify("Trade successful!", 'success');
+                await refreshData();
+                await checkSession();
+            } catch (err) {
+                notify(err.message, 'error');
+            }
+        };
+    }
 }
 
 function setView(v) {

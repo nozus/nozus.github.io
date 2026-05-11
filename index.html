@@ -34,12 +34,12 @@
 
         <aside class="sidebar">
             <nav>
-                <div class="nav-link active" id="view-market">
+                <a href="index.html" class="nav-link active">
                     <i data-lucide="layout-grid"></i> <span>Market</span>
-                </div>
-                <div class="nav-link" id="view-portfolio">
-                    <i data-lucide="pie-chart"></i> <span>Portfolio</span>
-                </div>
+                </a>
+                <a href="profile.html" class="nav-link">
+                    <i data-lucide="user"></i> <span>Profile</span>
+                </a>
                 <div class="nav-link" id="view-leaderboard">
                     <i data-lucide="trophy"></i> <span>Leaderboard</span>
                 </div>
@@ -47,12 +47,11 @@
                 <div class="nav-link" id="btn-launch">
                     <i data-lucide="plus-circle"></i> <span>Launch Currency</span>
                 </div>
-                <div class="nav-link" id="btn-settings">
-                    <i data-lucide="settings"></i> <span>Settings</span>
-                </div>
             </nav>
             <div style="margin-top: auto;">
-                <button id="btn-logout" class="btn btn-ghost w-full">Sign Out</button>
+                <button id="btn-logout" class="btn btn-ghost w-full" style="justify-content: flex-start; padding: 1rem;">
+                    <i data-lucide="log-out"></i> <span>Sign Out</span>
+                </button>
             </div>
         </aside>
 
