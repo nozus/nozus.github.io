@@ -57,6 +57,12 @@ function notify(msg, type = 'info') {
 async function init() {
     setupListeners();
     await checkSession();
+    
+    // Theme persistence
+    if (localStorage.getItem('theme') === 'dark') {
+        document.body.classList.add('dark-theme');
+    }
+
     await refreshData();
     subscribe();
 }
@@ -673,17 +679,12 @@ async function postTradeRefresh(currencyId) {
 // VIEWS
 // ============================
 function setView(v) {
-    console.log("Switching view to:", v);
     state.view = v;
     const marketView = $('market-view');
     const detailView = $('detail-view');
-    const leaderboardView = $('leaderboard-view');
-    const settingsView = $('settings-view');
     
     if (marketView) marketView.style.display = v === 'market' ? 'block' : 'none';
     if (detailView) detailView.style.display = v === 'detail' ? 'block' : 'none';
-    if (leaderboardView) leaderboardView.style.display = v === 'leaderboard' ? 'block' : 'none';
-    if (settingsView) settingsView.style.display = v === 'settings' ? 'block' : 'none';
 
     document.querySelectorAll('.nav-link').forEach(l => {
         l.classList.toggle('active', l.id === `view-${v}`);
@@ -695,8 +696,6 @@ function setView(v) {
 // ============================
 function setupListeners() {
     $('view-market')?.addEventListener('click', () => setView('market'));
-    $('view-leaderboard')?.addEventListener('click', () => setView('leaderboard'));
-    $('view-settings')?.addEventListener('click', () => setView('settings'));
     $('btn-back')?.addEventListener('click', () => setView('market'));
 
     $('btn-launch')?.addEventListener('click', () => { $('modal-launch').style.display = 'flex'; });
@@ -796,17 +795,6 @@ function setupListeners() {
     });
 
     $('btn-confirm-delete-yes')?.addEventListener('click', executeDelete);
-
-    $('btn-toggle-theme')?.addEventListener('click', () => {
-        const isDark = document.body.classList.toggle('dark-theme');
-        const icon = $('btn-toggle-theme').querySelector('i');
-        if (icon) {
-            icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
-            if (window.lucide) window.lucide.createIcons();
-        }
-        // Force chart re-render to pick up new theme colors
-        if (state.view === 'detail') renderChart();
-    });
 }
 
 // ============================

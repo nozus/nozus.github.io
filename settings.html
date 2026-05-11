@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings | nozus.</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="light-theme">
+    <div class="app-wrapper">
+        <header>
+            <div class="logo" style="margin-right: auto;">nozus.</div>
+            <div class="user-pill" id="user-display" style="display: none;">
+                <div class="flex align-center gap-1">
+                    <div id="nav-icon-slot"></div>
+                    <span id="nav-username" class="font-bold">Username</span>
+                    <span id="user-points" class="btn btn-primary" style="padding: 0.25rem 0.75rem; font-size: 0.75rem;">0 pts</span>
+                </div>
+            </div>
+        </header>
+
+        <aside class="sidebar">
+            <nav>
+                <a href="index.html" class="nav-link">
+                    <i data-lucide="layout-grid"></i> <span>Market</span>
+                </a>
+                <a href="profile.html" class="nav-link">
+                    <i data-lucide="user"></i> <span>Profile</span>
+                </a>
+                <a href="leaderboard.html" class="nav-link">
+                    <i data-lucide="trophy"></i> <span>Leaderboard</span>
+                </a>
+                <a href="settings.html" class="nav-link active">
+                    <i data-lucide="settings"></i> <span>Settings</span>
+                </a>
+                <hr style="margin: 1rem 0; border: none; border-top: 1px solid var(--border);">
+            </nav>
+            <div style="margin-top: auto;">
+                <button id="btn-logout" class="btn btn-ghost w-full" style="justify-content: flex-start; padding: 1rem;">
+                    <i data-lucide="log-out"></i> <span>Sign Out</span>
+                </button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="mb-2">
+                <h1>Settings</h1>
+                <p class="text-muted">Manage your account preferences.</p>
+            </div>
+            
+            <div class="card" style="max-width: 500px;">
+                <div class="input-field flex justify-between align-center">
+                    <div>
+                        <label style="margin-bottom: 0;">Dark Mode</label>
+                        <p class="text-xs text-muted">Toggle between light and dark themes.</p>
+                    </div>
+                    <button id="btn-toggle-theme" class="btn btn-ghost" style="border: 1px solid var(--border); padding: 0.5rem 1rem;">
+                        <i data-lucide="moon"></i> <span>Toggle</span>
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script type="module">
+        import { supabase } from './supabase-client.js';
+        import { renderIcon } from './icons.js';
+
+        const $ = (id) => document.getElementById(id);
+
+        async function init() {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                window.location.href = 'auth.html';
+                return;
+            }
+
+            // Fetch profile for header
+            const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+            if (profile) {
+                $('user-display').style.display = 'flex';
+                $('nav-username').innerText = profile.username;
+                $('user-points').innerText = `${profile.points.toLocaleString()} pts`;
+                $('nav-icon-slot').innerHTML = renderIcon(profile.equipped_icon || 'nozus_default', 32);
+            }
+
+            // Theme toggle
+            const btn = $('btn-toggle-theme');
+            const body = document.body;
+            
+            // Load saved theme
+            if (localStorage.getItem('theme') === 'dark') {
+                body.classList.add('dark-theme');
+                btn.querySelector('i').setAttribute('data-lucide', 'sun');
+                lucide.createIcons();
+            }
+
+            btn.onclick = () => {
+                const isDark = body.classList.toggle('dark-theme');
+                localStorage.setItem('theme', isDark ? 'dark' : 'light');
+                btn.querySelector('i').setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+                lucide.createIcons();
+            };
+
+            $('btn-logout').onclick = async () => {
+                await supabase.auth.signOut();
+                window.location.href = 'auth.html';
+            };
+            
+            lucide.createIcons();
+        }
+
+        init();
+    </script>
+</body>
+</html>

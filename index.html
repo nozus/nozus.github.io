@@ -42,12 +42,12 @@
                 <a href="profile.html" class="nav-link">
                     <i data-lucide="user"></i> <span>Profile</span>
                 </a>
-                <div class="nav-link" id="view-leaderboard">
+                <a href="leaderboard.html" class="nav-link">
                     <i data-lucide="trophy"></i> <span>Leaderboard</span>
-                </div>
-                <div class="nav-link" id="view-settings">
+                </a>
+                <a href="settings.html" class="nav-link">
                     <i data-lucide="settings"></i> <span>Settings</span>
-                </div>
+                </a>
                 <hr style="margin: 1rem 0; border: none; border-top: 1px solid var(--border);">
                 <div class="nav-link" id="btn-launch">
                     <i data-lucide="plus-circle"></i> <span>Launch Currency</span>
@@ -99,21 +99,6 @@
                 </div>
             </div>
 
-            <!-- ===== SETTINGS VIEW ===== -->
-            <div id="settings-view" style="display: none;">
-                <div class="card" style="max-width: 500px;">
-                    <h2 class="mb-2">Settings</h2>
-                    <div class="input-field flex justify-between align-center">
-                        <div>
-                            <label>Dark Mode</label>
-                            <p class="text-xs text-muted">Switch between light and dark themes.</p>
-                        </div>
-                        <button id="btn-toggle-theme" class="btn btn-ghost" style="border: 1px solid var(--border); padding: 0.5rem 1rem;">
-                            <i data-lucide="moon"></i> Toggle
-                        </button>
-                    </div>
-                </div>
-            </div>
 
             <!-- ===== DETAIL VIEW ===== -->
             <div id="detail-view" style="display: none;">
@@ -208,19 +193,6 @@
                 </div>
             </div>
 
-            <!-- ===== LEADERBOARD VIEW ===== -->
-            <div id="leaderboard-view" style="display: none;">
-                <div class="mb-2">
-                    <h1>Leaderboard</h1>
-                    <p class="text-muted">Top investors by total wealth.</p>
-                </div>
-                <div class="card" style="padding: 0; overflow: hidden;">
-                    <table class="data-table">
-                        <thead><tr><th>Rank</th><th>Investor</th><th style="text-align:right">Points</th></tr></thead>
-                        <tbody id="leaderboard-body"></tbody>
-                    </table>
-                </div>
-            </div>
         </main>
     </div>
 
