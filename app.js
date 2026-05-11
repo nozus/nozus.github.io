@@ -57,12 +57,6 @@ function notify(msg, type = 'info') {
 async function init() {
     setupListeners();
     await checkSession();
-    
-    // Theme persistence
-    if (localStorage.getItem('theme') === 'dark') {
-        document.body.classList.add('dark-theme');
-    }
-
     await refreshData();
     subscribe();
 }
@@ -104,7 +98,9 @@ async function fetchHoldings() {
 
 async function refreshData() {
     try {
-        const { data: c } = await supabase.from('currencies').select('*').order('created_at', { ascending: false });
+        const { data: c, error } = await supabase.from('currencies').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        console.log("Currencies fetched:", c?.length);
         if (c) {
             // If timeframe is not live, we need to fetch base prices
             if (state.marketRange !== 'live') {
@@ -707,7 +703,10 @@ function setupListeners() {
     });
 
     document.querySelectorAll('.btn-close').forEach(b => {
-        b.onclick = () => b.closest('.modal-overlay').style.display = 'none';
+        b.onclick = () => {
+            const modal = b.closest('.modal-overlay');
+            if (modal) modal.style.display = 'none';
+        };
     });
 
     const launchForm = $('form-launch');
