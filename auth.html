@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nozus | Enter the Exchange</title>
+    <link rel="icon" type="image/png" href="nozus_logo_favicon_1778476398592.png">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <!-- Supabase JS -->
@@ -173,11 +174,14 @@
             <form id="auth-form">
                 <div class="input-group">
                     <label>Username</label>
-                    <input type="text" id="username" placeholder="AlexInvestor" required>
+                    <input type="text" id="username" placeholder="" required>
                 </div>
                 <div class="input-group">
                     <label>Password</label>
-                    <input type="password" id="password" placeholder="••••••••" required>
+                    <div style="position: relative;">
+                        <input type="password" id="password" placeholder="••••••••" required>
+                        <span id="toggle-password-visibility" style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); cursor: pointer; color: rgba(255,255,255,0.4); font-size: 0.7rem; font-weight: 700; user-select: none;">SHOW</span>
+                    </div>
                 </div>
                 <button type="submit" id="submit-btn" class="btn-submit">Start Trading</button>
             </form>
@@ -205,7 +209,14 @@
             toggleDesc: document.getElementById('toggle-desc'),
             errorDisplay: document.getElementById('error-display'),
             username: document.getElementById('username'),
-            password: document.getElementById('password')
+            password: document.getElementById('password'),
+            togglePass: document.getElementById('toggle-password-visibility')
+        };
+
+        els.togglePass.onclick = () => {
+            const isPass = els.password.type === 'password';
+            els.password.type = isPass ? 'text' : 'password';
+            els.togglePass.innerText = isPass ? 'HIDE' : 'SHOW';
         };
 
         els.toggleLink.onclick = () => {
