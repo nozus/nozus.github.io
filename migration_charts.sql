@@ -39,3 +39,6 @@ ALTER TABLE public.price_history ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Price history is public" ON public.price_history FOR SELECT USING (true);
 -- Authenticated users can insert (when trades happen)
 CREATE POLICY "Authenticated can record prices" ON public.price_history FOR INSERT TO authenticated WITH CHECK (true);
+
+-- Allow creators to delete their own currencies
+CREATE POLICY "Users can delete own currencies" ON public.currencies FOR DELETE USING (auth.uid() = creator_id);

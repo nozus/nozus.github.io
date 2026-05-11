@@ -196,6 +196,7 @@ function renderMarket() {
             <td class="${cls}" style="text-align:right">${sign}${pct.toFixed(2)}%</td>
         </tr>`;
     }).join('');
+    if (window.lucide) window.lucide.createIcons();
 }
 
 // ============================
@@ -216,6 +217,7 @@ function renderLeaderboard() {
             <td class="font-bold" style="text-align:right">${u.points.toLocaleString()} pts</td>
         </tr>
     `).join('');
+    if (window.lucide) window.lucide.createIcons();
 }
 
 // ============================
@@ -268,6 +270,7 @@ function openDetail(currencyId) {
     renderChart();
     renderHistoryTable();
     updateTradeTotal();
+    if (window.lucide) window.lucide.createIcons();
 }
 
 // ============================
@@ -310,7 +313,13 @@ async function renderChart() {
         timeScale: { 
             borderColor: '#f1f5f9', 
             timeVisible: true,
-            secondsVisible: false
+            secondsVisible: false,
+        },
+        localization: {
+            timeFormatter: timestamp => {
+                const date = new Date(timestamp * 1000);
+                return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+            },
         },
         handleScroll: true,
         handleScale: true
@@ -377,6 +386,7 @@ async function renderHistoryTable() {
             <td style="text-align:right"><span class="text-xs uppercase font-bold text-dim">Trade</span></td>
         </tr>`;
     }).join('');
+    if (window.lucide) window.lucide.createIcons();
 }
 
 async function deleteCurrency() {
@@ -387,11 +397,18 @@ async function deleteCurrency() {
         try {
             const { error } = await supabase.from('currencies').delete().eq('id', c.id);
             if (error) throw error;
+            
+            // Remove from local state immediately for instant feedback
+            state.currencies = state.currencies.filter(curr => curr.id !== c.id);
+            state.selectedCurrency = null;
+            
             notify(`${c.symbol} deleted successfully.`, 'success');
             setView('market');
-            await refreshData();
+            renderMarket(); // Re-render table without the deleted item
+            await refreshData(); // Sync with server
         } catch (err) {
-            notify(err.message, 'error');
+            notify("Delete failed: " + err.message, 'error');
+            console.error("Deletion error:", err);
         }
     }
 }
@@ -449,9 +466,15 @@ async function executeTrade() {
         if (state.profile.points < cost) return notify("Insufficient points", 'error');
 
         try {
-            await supabase.from('profiles').update({ points: state.profile.points - cost }).eq('id', state.user.id);
+            // SLIPPAGE: Average price is slightly higher than current
+            const avgPrice = c.current_price * (1 + (shares * 0.0005)); 
+            const totalCost = shares * avgPrice;
+            
+            if (state.profile.points < totalCost) return notify("Insufficient points for this order (including slippage)", 'error');
+
+            await supabase.from('profiles').update({ points: state.profile.points - totalCost }).eq('id', state.user.id);
             await supabase.from('transactions').insert([{
-                user_id: state.user.id, currency_id: c.id, type: 'buy', amount: shares, price_at_time: c.current_price
+                user_id: state.user.id, currency_id: c.id, type: 'buy', amount: shares, price_at_time: avgPrice
             }]);
             const current = state.holdings[c.id] || 0;
             if (current > 0) {
@@ -459,7 +482,7 @@ async function executeTrade() {
             } else {
                 await supabase.from('holdings').insert([{ user_id: state.user.id, currency_id: c.id, shares: shares }]);
             }
-            // Bump price (demand) - more realistic 0.1% per share
+            // Bump price (demand) - new price is what you bought at
             const newPrice = Math.round((c.current_price * (1 + shares * 0.001)) * 100) / 100;
             await supabase.from('currencies').update({ current_price: newPrice }).eq('id', c.id);
             // Record real price point
@@ -473,9 +496,12 @@ async function executeTrade() {
         if (owned < shares) return notify(`You only own ${owned} shares`, 'error');
 
         try {
-            await supabase.from('profiles').update({ points: state.profile.points + cost }).eq('id', state.user.id);
+            const avgPrice = c.current_price * (1 - (shares * 0.0005));
+            const totalCredit = shares * avgPrice;
+
+            await supabase.from('profiles').update({ points: state.profile.points + totalCredit }).eq('id', state.user.id);
             await supabase.from('transactions').insert([{
-                user_id: state.user.id, currency_id: c.id, type: 'sell', amount: shares, price_at_time: c.current_price
+                user_id: state.user.id, currency_id: c.id, type: 'sell', amount: shares, price_at_time: avgPrice
             }]);
             await supabase.from('holdings').update({ shares: owned - shares }).eq('user_id', state.user.id).eq('currency_id', c.id);
             const newPrice = Math.max(0.01, Math.round((c.current_price * (1 - shares * 0.001)) * 100) / 100);

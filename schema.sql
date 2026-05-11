@@ -57,6 +57,7 @@ CREATE POLICY "Users can insert own profile" ON public.profiles FOR INSERT WITH 
 CREATE POLICY "Currencies are viewable by everyone" ON public.currencies FOR SELECT USING (true);
 CREATE POLICY "Users can launch currencies" ON public.currencies FOR INSERT WITH CHECK (auth.uid() = creator_id);
 CREATE POLICY "Users can update currencies" ON public.currencies FOR UPDATE USING (true);
+CREATE POLICY "Users can delete own currencies" ON public.currencies FOR DELETE USING (auth.uid() = creator_id);
 
 -- POLICIES: Transactions
 CREATE POLICY "Users can view own transactions" ON public.transactions FOR SELECT USING (auth.uid() = user_id);
