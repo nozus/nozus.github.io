@@ -248,11 +248,21 @@ function openDetail(currencyId) {
         returnEl.innerText = (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%';
         returnEl.style.color = pct >= 0 ? 'var(--accent)' : 'var(--danger)';
     }
-    if (holdingsEl) holdingsEl.innerText = (state.holdings[c.id] || 0) + ' shares';
+    if (holdingsEl) {
+        const shares = state.holdings[c.id] || 0;
+        const val = (shares * c.current_price).toFixed(2);
+        holdingsEl.innerText = `${shares} shares (${val} pts)`;
+    }
 
     // Trade panel
     const tradeHoldings = $('trade-holdings');
     if (tradeHoldings) tradeHoldings.innerText = (state.holdings[c.id] || 0) + ' shares';
+
+    // Show delete button if owner
+    const deleteBtn = $('btn-delete-currency');
+    if (deleteBtn) {
+        deleteBtn.style.display = (c.creator_id === state.user.id) ? 'flex' : 'none';
+    }
 
     setView('detail');
     renderChart();
@@ -356,14 +366,34 @@ async function renderHistoryTable() {
 
     body.innerHTML = data.map(d => {
         const date = new Date(d.recorded_at);
-        const timeStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        // Explicitly format to local time to avoid UTC confusion
+        const dateStr = date.toLocaleDateString();
+        const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+        
         return `
         <tr>
-            <td class="text-muted">${timeStr}</td>
+            <td class="text-muted">${dateStr} ${timeStr}</td>
             <td class="font-bold" style="text-align:right">${parseFloat(d.price).toFixed(2)}</td>
             <td style="text-align:right"><span class="text-xs uppercase font-bold text-dim">Trade</span></td>
         </tr>`;
     }).join('');
+}
+
+async function deleteCurrency() {
+    const c = state.selectedCurrency;
+    if (!c) return;
+    
+    if (confirm(`Are you sure you want to delete ${c.name} (${c.symbol})? This action cannot be undone.`)) {
+        try {
+            const { error } = await supabase.from('currencies').delete().eq('id', c.id);
+            if (error) throw error;
+            notify(`${c.symbol} deleted successfully.`, 'success');
+            setView('market');
+            await refreshData();
+        } catch (err) {
+            notify(err.message, 'error');
+        }
+    }
 }
 
 // ============================
@@ -429,8 +459,8 @@ async function executeTrade() {
             } else {
                 await supabase.from('holdings').insert([{ user_id: state.user.id, currency_id: c.id, shares: shares }]);
             }
-            // Bump price (demand)
-            const newPrice = Math.round((c.current_price * (1 + shares * 0.005)) * 100) / 100;
+            // Bump price (demand) - more realistic 0.1% per share
+            const newPrice = Math.round((c.current_price * (1 + shares * 0.001)) * 100) / 100;
             await supabase.from('currencies').update({ current_price: newPrice }).eq('id', c.id);
             // Record real price point
             await recordPrice(c.id, newPrice);
@@ -448,7 +478,7 @@ async function executeTrade() {
                 user_id: state.user.id, currency_id: c.id, type: 'sell', amount: shares, price_at_time: c.current_price
             }]);
             await supabase.from('holdings').update({ shares: owned - shares }).eq('user_id', state.user.id).eq('currency_id', c.id);
-            const newPrice = Math.max(0.01, Math.round((c.current_price * (1 - shares * 0.005)) * 100) / 100);
+            const newPrice = Math.max(0.01, Math.round((c.current_price * (1 - shares * 0.001)) * 100) / 100);
             await supabase.from('currencies').update({ current_price: newPrice }).eq('id', c.id);
             await recordPrice(c.id, newPrice);
 
@@ -554,6 +584,7 @@ function setupListeners() {
 
     $('trade-shares')?.addEventListener('input', updateTradeTotal);
     $('btn-execute-trade')?.addEventListener('click', executeTrade);
+    $('btn-delete-currency')?.addEventListener('click', deleteCurrency);
 
     // Market range tabs
     $('market-tabs')?.addEventListener('click', (e) => {

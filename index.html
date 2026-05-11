@@ -124,7 +124,6 @@
                                     <button class="range-btn" data-range="1y">1Y</button>
                                     <button class="range-btn" data-range="all">All</button>
                                 </div>
-                                <span class="text-xs text-muted font-bold uppercase">Real-time Feed</span>
                             </div>
                             <div id="chart-container" style="height: 420px;"></div>
                         </div>
@@ -168,6 +167,9 @@
                                 <div class="flex justify-between"><span class="font-bold">Est. Total</span><span id="trade-total" class="font-bold" style="font-size: 1.25rem;">0 pts</span></div>
                             </div>
                             <button id="btn-execute-trade" class="btn btn-primary w-full">Place Order</button>
+                            <button id="btn-delete-currency" class="btn btn-ghost w-full mt-1 text-danger" style="display:none; font-size: 0.8rem;">
+                                <i data-lucide="trash-2" style="width:14px;height:14px;"></i> Delete Currency
+                            </button>
                         </div>
                     </div>
                 </div>
