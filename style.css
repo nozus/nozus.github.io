@@ -1,24 +1,36 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
 
 :root {
+    --primary: #6366f1;
+    --primary-hover: #4f46e5;
+    --primary-light: rgba(99,102,241,0.1);
+    --radius-md: 16px;
+    --radius-lg: 24px;
+    --header-h: 72px;
+    --sidebar-w: 260px;
+    
+    /* Light Theme (Default) */
     --bg-page: #f8fafc;
     --bg-card: #ffffff;
     --border: #e2e8f0;
-    --primary: #6366f1;
-    --primary-light: #eef2ff;
-    --accent: #10b981;
-    --danger: #ef4444;
     --text-main: #0f172a;
     --text-muted: #64748b;
     --text-dim: #94a3b8;
-    --radius-md: 16px;
-    --radius-lg: 24px;
-    --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
-    --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.04), 0 4px 6px -2px rgba(0,0,0,0.02);
-    --shadow-lg: 0 20px 40px -12px rgba(0,0,0,0.08);
-    --header-h: 72px;
-    --sidebar-w: 280px;
+    --shadow: 0 10px 15px -3px rgba(0,0,0,0.04);
 }
+
+body.dark-theme {
+    --bg-page: #020617;
+    --bg-card: #0f172a;
+    --border: #1e293b;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --text-dim: #64748b;
+    --shadow: 0 10px 15px -3px rgba(0,0,0,0.5);
+}
+
+--accent: #10b981;
+--danger: #ef4444;
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -40,7 +52,7 @@ body {
 
 header {
     grid-area: header;
-    background: rgba(255,255,255,0.8);
+    background: var(--bg-card);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border);
@@ -53,7 +65,7 @@ header {
 
 .sidebar {
     grid-area: sidebar;
-    background: #fff;
+    background: var(--bg-card);
     border-right: 1px solid var(--border);
     padding: 2rem;
     display: flex;
@@ -93,12 +105,12 @@ header {
 
 /* --- Card --- */
 .card {
-    background: #fff;
+    background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     padding: 2rem;
-    box-shadow: var(--shadow-md);
-    transition: box-shadow 0.3s ease;
+    box-shadow: var(--shadow);
+    transition: all 0.3s ease;
 }
 .card:hover { box-shadow: var(--shadow-lg); }
 
@@ -178,7 +190,7 @@ header {
 
 /* --- Ticker --- */
 .ticker {
-    background: #fff; border-bottom: 1px solid var(--border);
+    background: var(--bg-card); border-bottom: 1px solid var(--border);
     padding: 0.75rem 0; margin: -2.5rem -2.5rem 2rem -2.5rem;
     font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;
     color: var(--text-muted); overflow: hidden;
@@ -218,7 +230,7 @@ header {
 .range-selector.mb-0 { margin-bottom: 0; }
 .range-btn {
     padding: 0.4rem 0.8rem; border-radius: 8px; border: 1px solid var(--border);
-    background: #fff; color: var(--text-muted); font-weight: 700;
+    background: var(--bg-page); color: var(--text-muted); font-weight: 700;
     font-size: 0.75rem; cursor: pointer; transition: all 0.2s;
     font-family: 'Plus Jakarta Sans', sans-serif;
 }
@@ -238,7 +250,7 @@ header {
     margin-top: 1.5rem;
 }
 .stat-item {
-    background: #fff; border: 1px solid var(--border); border-radius: 12px;
+    background: var(--bg-page); border: 1px solid var(--border); border-radius: 12px;
     padding: 1rem 1.25rem;
 }
 .stat-label { display: block; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); font-weight: 700; margin-bottom: 0.25rem; }
@@ -257,7 +269,7 @@ header {
     background: transparent; color: var(--text-muted);
     transition: all 0.2s; font-family: 'Plus Jakarta Sans', sans-serif;
 }
-.trade-tab.active { background: #fff; color: var(--text-main); box-shadow: var(--shadow-sm); }
+.trade-tab.active { background: var(--bg-card); color: var(--text-main); box-shadow: var(--shadow-sm); }
 .trade-tab:first-child.active { color: var(--accent); }
 .trade-tab:last-child.active { color: var(--danger); }
 
@@ -456,23 +468,30 @@ header {
     .sidebar hr, .sidebar #btn-launch, .sidebar div:last-child { display: none; }
     
     .main-content { padding: 1rem; padding-bottom: 5rem; }
-    header { padding: 0 1rem; height: 60px; }
-    .logo { font-size: 1.5rem; }
-    .ticker { margin: -1rem -1rem 1.5rem -1rem; font-size: 0.7rem; }
-    .price-value { font-size: 2.25rem; }
-    .stats-grid { grid-template-columns: 1fr 1fr; }
-    .icon-grid { grid-template-columns: repeat(auto-fill, minmax(75px, 1fr)); }
-    .profile-hero { padding: 2rem 1rem 1.5rem; }
+    header { padding: 0 1rem; height: 64px; }
+    .logo { font-size: 1.25rem; }
+    .ticker { margin: -1rem -1rem 1rem -1rem; font-size: 0.65rem; }
+    .price-value { font-size: 2rem; letter-spacing: -1px; }
+    .stats-grid { grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+    .stat-item { padding: 0.75rem; }
+    .stat-value { font-size: 0.9rem; }
+    .icon-grid { grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); }
+    .profile-hero { padding: 1.5rem 1rem; }
     
-    .range-selector { flex-wrap: wrap; }
-    .range-btn { padding: 0.35rem 0.65rem; font-size: 0.7rem; }
+    .detail-header { margin-bottom: 1rem; }
+    .price-display { gap: 0.5rem; flex-direction: column; align-items: flex-start; }
+    #btn-delete-currency { margin-left: 0; margin-top: 0.5rem; width: 100%; }
     
-    .price-display { gap: 0.25rem; }
-    #btn-delete-currency { padding: 0.4rem 0.75rem; font-size: 0.7rem; }
+    .range-selector { gap: 0.15rem; }
+    .range-btn { padding: 0.3rem 0.5rem; font-size: 0.65rem; }
+    
+    #btn-launch-mobile { display: inline-flex !important; }
+    #user-points { display: inline-flex !important; font-size: 0.65rem; padding: 0.25rem 0.6rem; border-radius: 8px; }
 }
 
 @media (max-width: 480px) {
     .stats-grid { grid-template-columns: 1fr; }
     .trade-tabs { margin-bottom: 1rem; }
     .price-value { font-size: 1.75rem; }
+    #user-points { font-size: 0.65rem; padding: 0.25rem 0.5rem; }
 }

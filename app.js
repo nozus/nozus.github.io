@@ -300,38 +300,57 @@ async function renderChart() {
 
     const data = await fetchPriceHistory(c.id, state.chartRange);
 
-    const { change } = getRealChange(c, state.chartRange);
+    const { change, pct } = getRealChange(c, state.chartRange);
     const pos = change >= 0;
     const color = pos ? '#10b981' : '#ef4444';
+
+    // Update floating badge
+    const badge = $('chart-percentage-badge');
+    if (badge) {
+        badge.innerText = (pos ? '+' : '') + pct.toFixed(2) + '%';
+        badge.style.color = color;
+        badge.style.background = pos ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)';
+    }
+
+    const style = getComputedStyle(document.body);
+    const bgColor = style.getPropertyValue('--bg-card').trim();
+    const textColor = style.getPropertyValue('--text-muted').trim();
+    const borderColor = style.getPropertyValue('--border').trim();
 
     const chart = LightweightCharts.createChart(container, {
         width: container.clientWidth,
         height: 420,
         layout: {
-            background: { type: 'solid', color: '#ffffff' },
-            textColor: '#64748b',
+            background: { type: 'solid', color: bgColor },
+            textColor: textColor,
             fontFamily: "'Plus Jakarta Sans', sans-serif"
         },
-        grid: { vertLines: { visible: false }, horzLines: { color: '#f1f5f9' } },
+        grid: { vertLines: { color: borderColor }, horzLines: { color: borderColor } },
         crosshair: {
             mode: LightweightCharts.CrosshairMode.Normal,
             vertLine: { color: '#6366f1', width: 1, style: 2, labelBackgroundColor: '#6366f1' },
             horzLine: { color: '#6366f1', width: 1, style: 2, labelBackgroundColor: '#6366f1' }
         },
-        rightPriceScale: { borderColor: '#f1f5f9' },
+        rightPriceScale: { borderColor: borderColor },
         timeScale: { 
-            borderColor: '#f1f5f9', 
+            borderColor: borderColor, 
             timeVisible: true,
             secondsVisible: false,
             tickMarkFormatter: (time, tickMarkType, locale) => {
                 const date = new Date(time * 1000);
-                return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true }).toUpperCase();
+                const hrs = date.getHours();
+                const mins = date.getMinutes();
+                const ampm = hrs >= 12 ? 'p.m.' : 'a.m.';
+                const h12 = hrs % 12 || 12;
+                return `${h12}:${mins.toString().padStart(2,'0')} ${ampm}`;
             }
         },
         localization: {
             timeFormatter: timestamp => {
                 const date = new Date(timestamp * 1000);
-                return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+                const ampm = date.getHours() >= 12 ? 'p.m.' : 'a.m.';
+                const h12 = date.getHours() % 12 || 12;
+                return `${date.toLocaleDateString()} ${h12}:${date.getMinutes().toString().padStart(2,'0')} ${ampm}`;
             },
         },
         handleScroll: true,
@@ -361,9 +380,9 @@ async function renderChart() {
         // Area (Mountain)
         series = chart.addAreaSeries({
             lineColor: color,
-            topColor: pos ? 'rgba(16,185,129,0.25)' : 'rgba(239,68,68,0.2)',
-            bottomColor: 'rgba(0,0,0,0)',
-            lineWidth: 2,
+            topColor: pos ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)',
+            bottomColor: 'rgba(16,185,129,0.0)',
+            lineWidth: 3,
         });
         series.setData(data);
     }
@@ -377,10 +396,11 @@ async function renderChart() {
             series.setData([{ time: now, value: val }]);
         }
     } else {
-        // Add a "current" point to ensure the line goes up to the latest trade
-        const last = data[data.length - 1];
-        if (last.value !== c.current_price && type !== 'candle' && type !== 'bar') {
-             data.push({ time: Math.floor(Date.now() / 1000), value: c.current_price });
+        // Ensure the chart has a starting point at the beginning of the data set
+        // to prevent it looking like a single floating dot
+        if (data.length === 1) {
+            const first = data[0];
+            data.unshift({ time: first.time - 3600, value: first.value });
         }
         series.setData(data);
     }
@@ -542,13 +562,15 @@ async function executeTrade() {
 
         try {
             // SLIPPAGE: Base spread (0.1%) + Volume impact (0.5% per share for visibility)
-            const spreadPrice = c.current_price * 1.001;
-            const avgPrice = spreadPrice * (1 + (shares * 0.0025)); // Half-impact for average price
+            const spreadPrice = parseFloat(c.current_price) * 1.001;
+            const avgPrice = spreadPrice * (1 + (shares * 0.0025)); 
             const totalCost = shares * avgPrice;
             
-            if (state.profile.points < totalCost) return notify("Insufficient points for this order (including slippage)", 'error');
+            const currentPoints = parseFloat(state.profile.points);
+            if (currentPoints < totalCost) return notify("Insufficient points", 'error');
 
-            await supabase.from('profiles').update({ points: state.profile.points - totalCost }).eq('id', state.user.id);
+            const { error: pError } = await supabase.from('profiles').update({ points: currentPoints - totalCost }).eq('id', state.user.id);
+            if (pError) throw pError;
             await supabase.from('transactions').insert([{
                 user_id: state.user.id, currency_id: c.id, type: 'buy', amount: shares, price_at_time: avgPrice
             }]);
@@ -579,11 +601,13 @@ async function executeTrade() {
         if (owned < shares) return notify(`You only own ${owned} shares`, 'error');
 
         try {
-            const spreadPrice = c.current_price * 0.999;
+            const spreadPrice = parseFloat(c.current_price) * 0.999;
             const avgPrice = spreadPrice * (1 - (shares * 0.0025));
             const totalCredit = shares * avgPrice;
 
-            await supabase.from('profiles').update({ points: state.profile.points + totalCredit }).eq('id', state.user.id);
+            const currentPoints = parseFloat(state.profile.points);
+            const { error: pError } = await supabase.from('profiles').update({ points: currentPoints + totalCredit }).eq('id', state.user.id);
+            if (pError) throw pError;
             await supabase.from('transactions').insert([{
                 user_id: state.user.id, currency_id: c.id, type: 'sell', amount: shares, price_at_time: avgPrice
             }]);
@@ -632,9 +656,11 @@ function setView(v) {
     const marketView = $('market-view');
     const detailView = $('detail-view');
     const leaderboardView = $('leaderboard-view');
+    const settingsView = $('settings-view');
     if (marketView) marketView.style.display = v === 'market' ? 'block' : 'none';
     if (detailView) detailView.style.display = v === 'detail' ? 'block' : 'none';
     if (leaderboardView) leaderboardView.style.display = v === 'leaderboard' ? 'block' : 'none';
+    if (settingsView) settingsView.style.display = v === 'settings' ? 'block' : 'none';
 
     document.querySelectorAll('.nav-link').forEach(l => {
         l.classList.toggle('active', l.id === `view-${v}`);
@@ -647,6 +673,7 @@ function setView(v) {
 function setupListeners() {
     $('view-market')?.addEventListener('click', () => setView('market'));
     $('view-leaderboard')?.addEventListener('click', () => setView('leaderboard'));
+    $('view-settings')?.addEventListener('click', () => setView('settings'));
     $('btn-back')?.addEventListener('click', () => setView('market'));
 
     $('btn-launch')?.addEventListener('click', () => { $('modal-launch').style.display = 'flex'; });
@@ -746,6 +773,17 @@ function setupListeners() {
     });
 
     $('btn-confirm-delete-yes')?.addEventListener('click', executeDelete);
+
+    $('btn-toggle-theme')?.addEventListener('click', () => {
+        const isDark = document.body.classList.toggle('dark-theme');
+        const icon = $('btn-toggle-theme').querySelector('i');
+        if (icon) {
+            icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+            if (window.lucide) window.lucide.createIcons();
+        }
+        // Force chart re-render to pick up new theme colors
+        if (state.view === 'detail') renderChart();
+    });
 }
 
 // ============================

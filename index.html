@@ -45,6 +45,9 @@
                 <div class="nav-link" id="view-leaderboard">
                     <i data-lucide="trophy"></i> <span>Leaderboard</span>
                 </div>
+                <div class="nav-link" id="view-settings">
+                    <i data-lucide="settings"></i> <span>Settings</span>
+                </div>
                 <hr style="margin: 1rem 0; border: none; border-top: 1px solid var(--border);">
                 <div class="nav-link" id="btn-launch">
                     <i data-lucide="plus-circle"></i> <span>Launch Currency</span>
@@ -96,6 +99,22 @@
                 </div>
             </div>
 
+            <!-- ===== SETTINGS VIEW ===== -->
+            <div id="settings-view" style="display: none;">
+                <div class="card" style="max-width: 500px;">
+                    <h2 class="mb-2">Settings</h2>
+                    <div class="input-field flex justify-between align-center">
+                        <div>
+                            <label>Dark Mode</label>
+                            <p class="text-xs text-muted">Switch between light and dark themes.</p>
+                        </div>
+                        <button id="btn-toggle-theme" class="btn btn-ghost" style="border: 1px solid var(--border); padding: 0.5rem 1rem;">
+                            <i data-lucide="moon"></i> Toggle
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <!-- ===== DETAIL VIEW ===== -->
             <div id="detail-view" style="display: none;">
                 <div class="detail-back" id="btn-back">
@@ -138,7 +157,9 @@
                                     <button class="range-btn" data-type="baseline" title="Baseline"><i data-lucide="trending-up" style="width:14px;height:14px;"></i></button>
                                 </div>
                             </div>
-                            <div id="chart-container" style="height: 420px;"></div>
+                            <div id="chart-container" style="height: 420px; position: relative;">
+                                <div id="chart-percentage-badge" style="position: absolute; top: 1rem; right: 4rem; z-index: 10; padding: 0.25rem 0.75rem; border-radius: 8px; font-weight: 800; font-size: 1.25rem;"></div>
+                            </div>
                         </div>
                         <div class="stats-grid mb-2">
                             <div class="stat-item"><span class="stat-label">IPO Price</span><span class="stat-value" id="stat-ipo">10.00</span></div>
