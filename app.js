@@ -16,7 +16,8 @@ let state = {
     chartSeries: null,
     holdings: {},
     marketRange: 'live',
-    chartRange: '1d'
+    chartRange: '1d',
+    chartType: 'area'
 };
 
 const $ = (id) => document.getElementById(id);
@@ -288,13 +289,11 @@ async function renderChart() {
     const c = state.selectedCurrency;
     if (!c) return;
 
-    // Fetch REAL price history based on range
     const data = await fetchPriceHistory(c.id, state.chartRange);
 
     const { change } = getRealChange(c, state.chartRange);
     const pos = change >= 0;
-    const lineColor = pos ? '#10b981' : '#ef4444';
-    const topColor = pos ? 'rgba(16,185,129,0.25)' : 'rgba(239,68,68,0.2)';
+    const color = pos ? '#10b981' : '#ef4444';
 
     const chart = LightweightCharts.createChart(container, {
         width: container.clientWidth,
@@ -304,10 +303,7 @@ async function renderChart() {
             textColor: '#64748b',
             fontFamily: "'Plus Jakarta Sans', sans-serif"
         },
-        grid: {
-            vertLines: { visible: false },
-            horzLines: { color: '#f1f5f9' }
-        },
+        grid: { vertLines: { visible: false }, horzLines: { color: '#f1f5f9' } },
         crosshair: {
             mode: LightweightCharts.CrosshairMode.Normal,
             vertLine: { color: '#6366f1', width: 1, style: 2, labelBackgroundColor: '#6366f1' },
@@ -333,33 +329,85 @@ async function renderChart() {
         handleScale: true
     });
 
-    const series = chart.addAreaSeries({
-        lineColor: lineColor,
-        topColor: topColor,
-        bottomColor: 'rgba(0,0,0,0)',
-        lineWidth: 2,
-        priceLineVisible: true,
-        lastValueVisible: true,
-        priceFormat: { type: 'price', precision: 2, minMove: 0.01 }
-    });
+    let series;
+    const type = state.chartType;
+
+    if (type === 'candle' || type === 'bar') {
+        const ohlcData = convertToOHLC(data);
+        series = type === 'candle' 
+            ? chart.addCandlestickSeries({ upColor: '#10b981', downColor: '#ef4444', borderVisible: false, wickUpColor: '#10b981', wickDownColor: '#ef4444' })
+            : chart.addBarSeries({ upColor: '#10b981', downColor: '#ef4444' });
+        series.setData(ohlcData);
+    } else if (type === 'baseline') {
+        series = chart.addBaselineSeries({ 
+            baseValue: { type: 'price', price: data[0]?.value || 10 },
+            topLineColor: '#10b981', topFillColor1: 'rgba(16,185,129,0.2)', topFillColor2: 'rgba(16,185,129,0.0)',
+            bottomLineColor: '#ef4444', bottomFillColor1: 'rgba(239,68,68,0.0)', bottomFillColor2: 'rgba(239,68,68,0.2)'
+        });
+        series.setData(data);
+    } else if (type === 'line') {
+        series = chart.addLineSeries({ color: color, lineWidth: 2 });
+        series.setData(data);
+    } else {
+        // Area (Mountain)
+        series = chart.addAreaSeries({
+            lineColor: color,
+            topColor: pos ? 'rgba(16,185,129,0.25)' : 'rgba(239,68,68,0.2)',
+            bottomColor: 'rgba(0,0,0,0)',
+            lineWidth: 2,
+        });
+        series.setData(data);
+    }
 
     if (data.length === 0) {
-        // No data in range — show current price
         const now = Math.floor(Date.now() / 1000);
-        series.setData([{ time: now, value: c.current_price }]);
-    } else {
-        series.setData(data);
+        const val = c.current_price;
+        if (type === 'candle' || type === 'bar') {
+            series.setData([{ time: now, open: val, high: val, low: val, close: val }]);
+        } else {
+            series.setData([{ time: now, value: val }]);
+        }
     }
 
     chart.timeScale().fitContent();
     state.chart = chart;
     state.chartSeries = series;
 
-    // Resize
-    const resizeObserver = new ResizeObserver(() => {
-        chart.applyOptions({ width: container.clientWidth });
-    });
+    const resizeObserver = new ResizeObserver(() => { chart.applyOptions({ width: container.clientWidth }); });
     resizeObserver.observe(container);
+}
+
+function convertToOHLC(data) {
+    if (data.length === 0) return [];
+    
+    // For this simple version, we'll treat each trade as its own candle
+    // but with a tiny bit of variation to make it look like a real candle
+    // if there are multiple trades at the same timestamp.
+    // Real OHLC requires grouping by time (e.g. 1 min candles)
+    
+    const interval = 60; // 1 minute candles
+    const candles = [];
+    let currentCandle = null;
+
+    data.forEach(p => {
+        const bucket = Math.floor(p.time / interval) * interval;
+        if (!currentCandle || currentCandle.time !== bucket) {
+            if (currentCandle) candles.push(currentCandle);
+            currentCandle = {
+                time: bucket,
+                open: p.value,
+                high: p.value,
+                low: p.value,
+                close: p.value
+            };
+        } else {
+            currentCandle.high = Math.max(currentCandle.high, p.value);
+            currentCandle.low = Math.min(currentCandle.low, p.value);
+            currentCandle.close = p.value;
+        }
+    });
+    if (currentCandle) candles.push(currentCandle);
+    return candles;
 }
 
 // ============================
@@ -652,6 +700,15 @@ function setupListeners() {
         if (btn) {
             state.chartRange = btn.dataset.range;
             document.querySelectorAll('#chart-tabs .range-btn').forEach(b => b.classList.toggle('active', b === btn));
+            renderChart();
+        }
+    });
+
+    $('chart-type-tabs')?.addEventListener('click', (e) => {
+        const btn = e.target.closest('.range-btn');
+        if (btn) {
+            state.chartType = btn.dataset.type;
+            document.querySelectorAll('#chart-type-tabs .range-btn').forEach(b => b.classList.toggle('active', b === btn));
             renderChart();
         }
     });

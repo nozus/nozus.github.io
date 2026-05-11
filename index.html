@@ -21,7 +21,7 @@
 <body>
     <div class="app-wrapper">
         <header>
-            <div class="logo">nozus.</div>
+            <div class="logo" style="margin-right: auto;">nozus.</div>
             <div class="user-pill" id="user-display" style="display: none;">
                 <div class="flex align-center gap-1">
                     <div id="nav-icon-slot"></div>
@@ -126,6 +126,13 @@
                                     <button class="range-btn" data-range="1m">1M</button>
                                     <button class="range-btn" data-range="1y">1Y</button>
                                     <button class="range-btn" data-range="all">All</button>
+                                </div>
+                                <div class="range-selector mb-0" id="chart-type-tabs">
+                                    <button class="range-btn active" data-type="area" title="Mountain"><i data-lucide="area-chart" style="width:14px;height:14px;"></i></button>
+                                    <button class="range-btn" data-type="line" title="Line"><i data-lucide="line-chart" style="width:14px;height:14px;"></i></button>
+                                    <button class="range-btn" data-type="candle" title="Candles"><i data-lucide="candlestick-chart" style="width:14px;height:14px;"></i></button>
+                                    <button class="range-btn" data-type="bar" title="Bars"><i data-lucide="bar-chart-3" style="width:14px;height:14px;"></i></button>
+                                    <button class="range-btn" data-type="baseline" title="Baseline"><i data-lucide="trending-up" style="width:14px;height:14px;"></i></button>
                                 </div>
                             </div>
                             <div id="chart-container" style="height: 420px;"></div>
