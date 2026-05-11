@@ -1,6 +1,6 @@
 -- ============================================
--- MIGRATION: Fix FK constraints + add auto-profile trigger
--- Run this in your Supabase SQL Editor NOW
+-- MIGRATION: Fix FK constraints + Storage RLS + Auto-profile
+-- Run this ENTIRE script in your Supabase SQL Editor
 -- ============================================
 
 -- 1. Drop the old foreign key on currencies.creator_id
@@ -41,6 +41,41 @@ CREATE TRIGGER on_auth_user_created
     FOR EACH ROW
     EXECUTE FUNCTION public.handle_new_user();
 
--- 6. Create the storage bucket for profile images (run once)
--- NOTE: You also need to create the 'avatars' bucket in the
--- Supabase Dashboard > Storage, and set it to PUBLIC.
+-- ============================================
+-- 6. STORAGE RLS POLICIES for the 'avatars' bucket
+-- These allow authenticated users to upload/update/read
+-- their own files (stored under their user ID folder).
+-- ============================================
+
+-- Allow authenticated users to upload files into their own folder
+CREATE POLICY "Users can upload their own avatars"
+ON storage.objects FOR INSERT
+TO authenticated
+WITH CHECK (
+    bucket_id = 'avatars'
+    AND (storage.foldername(name))[1] = auth.uid()::text
+);
+
+-- Allow authenticated users to update/overwrite their own files
+CREATE POLICY "Users can update their own avatars"
+ON storage.objects FOR UPDATE
+TO authenticated
+USING (
+    bucket_id = 'avatars'
+    AND (storage.foldername(name))[1] = auth.uid()::text
+);
+
+-- Allow anyone to read avatar files (public profile images)
+CREATE POLICY "Avatar images are publicly accessible"
+ON storage.objects FOR SELECT
+TO public
+USING (bucket_id = 'avatars');
+
+-- Allow users to delete their own avatar files
+CREATE POLICY "Users can delete their own avatars"
+ON storage.objects FOR DELETE
+TO authenticated
+USING (
+    bucket_id = 'avatars'
+    AND (storage.foldername(name))[1] = auth.uid()::text
+);

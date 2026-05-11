@@ -180,7 +180,22 @@
         }
 
         async function refresh() {
-            const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+            let { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+
+            // Auto-create profile if it doesn't exist
+            if (!data) {
+                const username = user.user_metadata?.username || 'user_' + user.id.substring(0, 8);
+                const { data: newProfile, error: insertErr } = await supabase.from('profiles')
+                    .insert([{ id: user.id, username: username, points: 1000 }])
+                    .select()
+                    .single();
+                if (insertErr) {
+                    console.error("Could not create profile:", insertErr.message);
+                    return;
+                }
+                data = newProfile;
+            }
+
             if (data) {
                 profile = data;
                 document.getElementById('nav-username').innerText = profile.username;

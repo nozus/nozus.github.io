@@ -6,7 +6,6 @@
     <title>nozus. | The Modern Exchange</title>
     <link rel="icon" type="image/png" href="nozus_logo_favicon_1778476398592.png">
     <link rel="stylesheet" href="style.css">
-    <!-- Redirect ASAP if not logged in -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="module">
         import { supabase } from './supabase-client.js';
@@ -17,6 +16,7 @@
         check();
     </script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
 </head>
 <body>
     <div class="app-wrapper">
@@ -34,9 +34,9 @@
 
         <aside class="sidebar">
             <nav>
-                <a href="index.html" class="nav-link active">
+                <div class="nav-link active" id="view-market">
                     <i data-lucide="layout-grid"></i> <span>Market</span>
-                </a>
+                </div>
                 <a href="profile.html" class="nav-link">
                     <i data-lucide="user"></i> <span>Profile</span>
                 </a>
@@ -56,58 +56,115 @@
         </aside>
 
         <main class="main-content">
+            <!-- Ticker Bar -->
             <div class="ticker">
                 <div class="ticker-content" id="ticker-data">
                     <span style="margin-right: 2rem;">NZUS <b style="color: var(--accent)">10.00</b></span>
                 </div>
             </div>
 
-            <div id="view-title-area" class="mb-2">
-                <h1 id="main-title">Market</h1>
-                <p id="main-subtitle" class="text-muted">Live performance of personal currencies.</p>
+            <!-- ===== MARKET VIEW ===== -->
+            <div id="market-view">
+                <div class="mb-2">
+                    <h1>Market</h1>
+                    <p class="text-muted">Live performance of personal currencies.</p>
+                </div>
+                <div class="card" style="padding: 0; overflow: hidden;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Symbol</th>
+                                <th>Name</th>
+                                <th style="text-align:right">Price</th>
+                                <th style="text-align:right">Change</th>
+                                <th style="text-align:right">% Change</th>
+                                <th style="text-align:center; width: 140px;">Chart</th>
+                            </tr>
+                        </thead>
+                        <tbody id="market-body"></tbody>
+                    </table>
+                </div>
             </div>
 
-            <div id="market-area" class="card">
-                <table class="data-table">
-                    <thead>
-                        <tr><th>Symbol</th><th>Name</th><th>Price</th><th>Action</th></tr>
-                    </thead>
-                    <tbody id="market-body">
-                        <!-- Dynamic -->
-                    </tbody>
-                </table>
+            <!-- ===== DETAIL VIEW ===== -->
+            <div id="detail-view" style="display: none;">
+                <div class="detail-back" id="btn-back">
+                    <i data-lucide="arrow-left" style="width:18px;height:18px;"></i> Back to Market
+                </div>
+
+                <div class="detail-header">
+                    <div class="flex align-center gap-1 mb-1">
+                        <span class="symbol-pill" id="detail-symbol" style="font-size:1rem; padding: 0.4rem 1rem;">NZUS</span>
+                        <h1 id="detail-name" style="font-size: 1.5rem;">Currency Name</h1>
+                    </div>
+                    <div class="price-display">
+                        <span class="price-value" id="detail-price">0.00</span>
+                        <span class="price-unit">pts</span>
+                        <span class="price-change" id="detail-change">+0.00 (+0.00%)</span>
+                    </div>
+                </div>
+
+                <div class="range-selector" id="range-selector">
+                    <button class="range-btn active" data-range="1D">1D</button>
+                    <button class="range-btn" data-range="1W">1W</button>
+                    <button class="range-btn" data-range="1M">1M</button>
+                    <button class="range-btn" data-range="3M">3M</button>
+                    <button class="range-btn" data-range="1Y">1Y</button>
+                </div>
+
+                <div class="detail-grid">
+                    <div>
+                        <div class="card mb-2" style="padding: 0; overflow: hidden;">
+                            <div id="chart-container" style="height: 420px;"></div>
+                        </div>
+                        <div class="stats-grid">
+                            <div class="stat-item"><span class="stat-label">Open</span><span class="stat-value" id="stat-open">—</span></div>
+                            <div class="stat-item"><span class="stat-label">High</span><span class="stat-value" id="stat-high">—</span></div>
+                            <div class="stat-item"><span class="stat-label">Low</span><span class="stat-value" id="stat-low">—</span></div>
+                            <div class="stat-item"><span class="stat-label">Volume</span><span class="stat-value" id="stat-volume">—</span></div>
+                            <div class="stat-item"><span class="stat-label">Market Cap</span><span class="stat-value" id="stat-mcap">—</span></div>
+                            <div class="stat-item"><span class="stat-label">IPO Price</span><span class="stat-value" id="stat-ipo">10.00</span></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="card trade-card">
+                            <div class="trade-tabs">
+                                <button class="trade-tab active" data-action="buy">Buy</button>
+                                <button class="trade-tab" data-action="sell">Sell</button>
+                            </div>
+                            <div class="input-field">
+                                <label>Shares</label>
+                                <input type="number" id="trade-shares" value="1" min="1">
+                            </div>
+                            <div class="trade-summary">
+                                <div class="flex justify-between mb-1"><span class="text-muted">Price / share</span><span id="trade-pps" class="font-bold">0 pts</span></div>
+                                <div class="flex justify-between mb-1"><span class="text-muted">Your Holdings</span><span id="trade-holdings" class="font-bold">0 shares</span></div>
+                                <hr style="border:none; border-top: 1px solid var(--border); margin: 0.75rem 0;">
+                                <div class="flex justify-between"><span class="font-bold">Est. Total</span><span id="trade-total" class="font-bold" style="font-size: 1.25rem;">0 pts</span></div>
+                            </div>
+                            <button id="btn-execute-trade" class="btn btn-primary w-full">Place Order</button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <!-- Other views hidden by default -->
-            <div id="portfolio-area" class="card" style="display: none;">
-                <table class="data-table">
-                    <thead><tr><th>Asset</th><th>Shares</th><th>Value</th></tr></thead>
-                    <tbody id="portfolio-body"></tbody>
-                </table>
-            </div>
-
-            <div id="leaderboard-area" class="card" style="display: none;">
-                <table class="data-table">
-                    <thead><tr><th>Rank</th><th>Investor</th><th>Points</th></tr></thead>
-                    <tbody id="leaderboard-body"></tbody>
-                </table>
+            <!-- ===== LEADERBOARD VIEW ===== -->
+            <div id="leaderboard-view" style="display: none;">
+                <div class="mb-2">
+                    <h1>Leaderboard</h1>
+                    <p class="text-muted">Top investors by total wealth.</p>
+                </div>
+                <div class="card" style="padding: 0; overflow: hidden;">
+                    <table class="data-table">
+                        <thead><tr><th>Rank</th><th>Investor</th><th style="text-align:right">Points</th></tr></thead>
+                        <tbody id="leaderboard-body"></tbody>
+                    </table>
+                </div>
             </div>
         </main>
     </div>
 
-    <!-- Modals -->
-    <div id="modal-settings" class="modal-overlay">
-        <div class="modal card" style="width: 100%; max-width: 400px; margin: auto;">
-            <h3 class="mb-2">Settings</h3>
-            <form id="form-settings">
-                <div class="input-field"><label>Avatar URL</label><input type="text" id="set-avatar"></div>
-                <div class="input-field"><label>Banner URL</label><input type="text" id="set-banner"></div>
-                <button type="submit" class="btn btn-primary w-full">Save Changes</button>
-                <button type="button" class="btn btn-ghost w-full mt-1 btn-close">Cancel</button>
-            </form>
-        </div>
-    </div>
-
+    <!-- Launch Modal -->
     <div id="modal-launch" class="modal-overlay">
         <div class="modal card" style="width: 100%; max-width: 400px; margin: auto;">
             <h3 class="mb-2">Launch Currency</h3>
@@ -117,16 +174,6 @@
                 <button type="submit" class="btn btn-primary w-full">Launch Currency</button>
                 <button type="button" class="btn btn-ghost w-full mt-1 btn-close">Cancel</button>
             </form>
-        </div>
-    </div>
-
-    <div id="modal-trade" class="modal-overlay">
-        <div class="modal card" style="width: 100%; max-width: 400px; margin: auto;">
-            <h3 id="trade-title" class="mb-2">Trade</h3>
-            <div class="flex justify-between mb-2"><span>Price</span><span id="trade-price" class="font-bold">0 pts</span></div>
-            <div class="input-field"><label>Amount</label><input type="number" id="trade-amount" value="1" min="1"></div>
-            <button id="btn-confirm-trade" class="btn btn-primary w-full">Execute Trade</button>
-            <button type="button" class="btn btn-ghost w-full mt-1 btn-close">Cancel</button>
         </div>
     </div>
 
