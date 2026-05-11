@@ -169,9 +169,6 @@ async function fetchPriceHistory(currencyId, range = '1d') {
 let lastRecordTime = 0;
 async function recordPrice(currencyId, price) {
     let now = Math.floor(Date.now() / 1000);
-let lastRecordTime = 0;
-async function recordPrice(currencyId, price) {
-    let now = Math.floor(Date.now() / 1000);
     if (now <= lastRecordTime) {
         now = lastRecordTime + 1;
     }
@@ -676,11 +673,13 @@ async function postTradeRefresh(currencyId) {
 // VIEWS
 // ============================
 function setView(v) {
+    console.log("Switching view to:", v);
     state.view = v;
     const marketView = $('market-view');
     const detailView = $('detail-view');
     const leaderboardView = $('leaderboard-view');
     const settingsView = $('settings-view');
+    
     if (marketView) marketView.style.display = v === 'market' ? 'block' : 'none';
     if (detailView) detailView.style.display = v === 'detail' ? 'block' : 'none';
     if (leaderboardView) leaderboardView.style.display = v === 'leaderboard' ? 'block' : 'none';

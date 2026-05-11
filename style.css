@@ -462,10 +462,15 @@ header {
         padding: 0.5rem 1rem; flex-direction: row; justify-content: center;
         z-index: 1000;
     }
-    .sidebar nav { flex-direction: row; gap: 0.5rem; width: 100%; justify-content: space-around; }
-    .sidebar .nav-link { margin-bottom: 0; padding: 0.75rem; flex-direction: column; gap: 0.25rem; font-size: 0.65rem; }
-    .sidebar .nav-link i { width: 20px; height: 20px; }
-    .sidebar hr, .sidebar #btn-launch, .sidebar div:last-child { display: none; }
+    .sidebar nav { flex-direction: row; gap: 0.25rem; width: 100%; justify-content: space-between; }
+    .sidebar .nav-link { 
+        margin-bottom: 0; padding: 0.5rem 0.25rem; flex-direction: column; 
+        gap: 0.15rem; font-size: 0.6rem; flex: 1; text-align: center;
+        border-radius: 8px;
+    }
+    .sidebar .nav-link i { width: 18px; height: 18px; }
+    .sidebar hr, .sidebar div:last-child { display: none; }
+    #btn-launch { display: flex !important; }
     
     .main-content { padding: 1rem; padding-bottom: 5rem; }
     header { padding: 0 1rem; height: 64px; }
