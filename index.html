@@ -27,6 +27,9 @@
                     <div id="nav-icon-slot"></div>
                     <span id="nav-username" class="font-bold">Username</span>
                     <span id="user-points" class="btn btn-primary" style="padding: 0.25rem 0.75rem; font-size: 0.75rem;">0 pts</span>
+                    <button id="btn-launch-mobile" class="btn btn-primary" style="display: none; padding: 0.4rem; border-radius: 50%;">
+                        <i data-lucide="plus"></i>
+                    </button>
                 </div>
             </div>
         </header>
@@ -118,8 +121,8 @@
 
                 <div class="detail-grid">
                     <div>
-                        <div class="card mb-2" style="padding: 0; overflow: hidden;">
-                            <div class="p-1 flex justify-between align-center border-b">
+                        <div class="card mb-2" style="padding: 0; overflow: hidden; position: relative;">
+                            <div class="p-1 flex justify-between align-center border-b" style="flex-wrap: wrap; gap: 0.5rem;">
                                 <div class="range-selector mb-0" id="chart-tabs">
                                     <button class="range-btn" data-range="1h">1H</button>
                                     <button class="range-btn active" data-range="1d">1D</button>

@@ -166,10 +166,19 @@ async function fetchPriceHistory(currencyId, range = '1d') {
 // ============================
 // RECORD PRICE (after trades)
 // ============================
+let lastRecordTime = 0;
 async function recordPrice(currencyId, price) {
+    let now = Math.floor(Date.now() / 1000);
+    // Ensure unique timestamp for LightweightCharts
+    if (now <= lastRecordTime) {
+        now = lastRecordTime + 1;
+    }
+    lastRecordTime = now;
+
     await supabase.from('price_history').insert([{
         currency_id: currencyId,
-        price: price
+        price: price,
+        recorded_at: new Date(now * 1000).toISOString()
     }]);
 }
 
@@ -316,13 +325,13 @@ async function renderChart() {
             secondsVisible: false,
             tickMarkFormatter: (time, tickMarkType, locale) => {
                 const date = new Date(time * 1000);
-                return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+                return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true }).toUpperCase();
             }
         },
         localization: {
             timeFormatter: timestamp => {
                 const date = new Date(timestamp * 1000);
-                return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+                return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
             },
         },
         handleScroll: true,
@@ -367,6 +376,13 @@ async function renderChart() {
         } else {
             series.setData([{ time: now, value: val }]);
         }
+    } else {
+        // Add a "current" point to ensure the line goes up to the latest trade
+        const last = data[data.length - 1];
+        if (last.value !== c.current_price && type !== 'candle' && type !== 'bar') {
+             data.push({ time: Math.floor(Date.now() / 1000), value: c.current_price });
+        }
+        series.setData(data);
     }
 
     chart.timeScale().fitContent();
@@ -525,9 +541,9 @@ async function executeTrade() {
         if (state.profile.points < cost) return notify("Insufficient points", 'error');
 
         try {
-            // SLIPPAGE: Base spread (0.1%) + Volume impact (0.05% per share)
+            // SLIPPAGE: Base spread (0.1%) + Volume impact (0.5% per share for visibility)
             const spreadPrice = c.current_price * 1.001;
-            const avgPrice = spreadPrice * (1 + (shares * 0.0005)); 
+            const avgPrice = spreadPrice * (1 + (shares * 0.0025)); // Half-impact for average price
             const totalCost = shares * avgPrice;
             
             if (state.profile.points < totalCost) return notify("Insufficient points for this order (including slippage)", 'error');
@@ -546,8 +562,8 @@ async function executeTrade() {
             
             if (hError) throw hError;
 
-            // Bump price (demand) - new price is what you bought at
-            const newPrice = Math.round((c.current_price * (1 + shares * 0.001)) * 100) / 100;
+            // Bump price (demand) - 0.5% impact per share
+            const newPrice = Math.round((c.current_price * (1 + shares * 0.005)) * 100) / 100;
             await supabase.from('currencies').update({ current_price: newPrice }).eq('id', c.id);
             // Record real price point
             await recordPrice(c.id, newPrice);
@@ -564,7 +580,7 @@ async function executeTrade() {
 
         try {
             const spreadPrice = c.current_price * 0.999;
-            const avgPrice = spreadPrice * (1 - (shares * 0.0005));
+            const avgPrice = spreadPrice * (1 - (shares * 0.0025));
             const totalCredit = shares * avgPrice;
 
             await supabase.from('profiles').update({ points: state.profile.points + totalCredit }).eq('id', state.user.id);
@@ -578,7 +594,7 @@ async function executeTrade() {
             
             if (hError) throw hError;
 
-            const newPrice = Math.max(0.01, Math.round((c.current_price * (1 - shares * 0.001)) * 100) / 100);
+            const newPrice = Math.max(0.01, Math.round((c.current_price * (1 - shares * 0.005)) * 100) / 100);
             await supabase.from('currencies').update({ current_price: newPrice }).eq('id', c.id);
             await recordPrice(c.id, newPrice);
 
@@ -633,12 +649,14 @@ function setupListeners() {
     $('view-leaderboard')?.addEventListener('click', () => setView('leaderboard'));
     $('btn-back')?.addEventListener('click', () => setView('market'));
 
+    $('btn-launch')?.addEventListener('click', () => { $('modal-launch').style.display = 'flex'; });
+    $('btn-launch-mobile')?.addEventListener('click', () => { $('modal-launch').style.display = 'flex'; });
+
     $('btn-logout')?.addEventListener('click', async () => {
         await supabase.auth.signOut();
         window.location.href = 'auth.html';
     });
 
-    $('btn-launch')?.addEventListener('click', () => { $('modal-launch').style.display = 'flex'; });
     document.querySelectorAll('.btn-close').forEach(b => {
         b.onclick = () => b.closest('.modal-overlay').style.display = 'none';
     });
