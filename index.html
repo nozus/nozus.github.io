@@ -23,6 +23,7 @@
                         <button id="btn-login-trigger" class="btn btn-primary">Sign In</button>
                     </div>
                     <div id="user-profile-pill" class="profile-pill" style="display: none;">
+                        <img id="nav-avatar" src="" style="width: 24px; height: 24px; border-radius: 50%; display: none;">
                         <div class="avatar" id="nav-initials">U</div>
                         <span id="nav-username" class="font-bold">Username</span>
                         <i data-lucide="chevron-down" style="width: 16px;"></i>
@@ -32,20 +33,14 @@
             <!-- Yahoo Style Ticker -->
             <div class="market-ticker">
                 <div class="ticker-content" id="ticker-data">
-                    <!-- Dynamic Ticker Items -->
                     <div class="ticker-item"><span>$NZS</span> <span class="trend-up">10.00 (+0.0%)</span></div>
-                    <div class="ticker-item"><span>$BTC</span> <span class="trend-up">65,432 (+1.2%)</span></div>
-                    <div class="ticker-item"><span>$ETH</span> <span class="trend-down">3,456 (-0.5%)</span></div>
-                    <!-- Duplicate for infinite scroll effect -->
-                    <div class="ticker-item"><span>$NZS</span> <span class="trend-up">10.00 (+0.0%)</span></div>
-                    <div class="ticker-item"><span>$BTC</span> <span class="trend-up">65,432 (+1.2%)</span></div>
-                    <div class="ticker-item"><span>$ETH</span> <span class="trend-down">3,456 (-0.5%)</span></div>
+                    <!-- Duplicate items for scroll -->
                 </div>
             </div>
         </header>
 
         <div class="main-layout">
-            <!-- Left Sidebar (Facebook Style) -->
+            <!-- Left Sidebar -->
             <aside class="sidebar">
                 <div class="nav-group">
                     <div class="nav-link active" id="view-market-trigger">
@@ -54,8 +49,8 @@
                     <div class="nav-link" id="view-portfolio-trigger">
                         <i data-lucide="wallet"></i> <span>My Portfolio</span>
                     </div>
-                    <div class="nav-link">
-                        <i data-lucide="newspaper"></i> <span>Market News</span>
+                    <div class="nav-link" id="view-leaderboard-trigger">
+                        <i data-lucide="trophy"></i> <span>Leaderboard</span>
                     </div>
                 </div>
 
@@ -64,8 +59,8 @@
                     <div class="nav-link" id="btn-launch-trigger">
                         <i data-lucide="plus-circle"></i> <span>Launch Token</span>
                     </div>
-                    <div class="nav-link">
-                        <i data-lucide="users"></i> <span>Top Investors</span>
+                    <div class="nav-link" id="btn-settings-trigger">
+                        <i data-lucide="settings"></i> <span>Profile Settings</span>
                     </div>
                 </div>
 
@@ -79,16 +74,15 @@
             <!-- Feed Area -->
             <main class="feed-area">
                 <div class="feed-container">
-                    <div id="market-header" class="mb-2">
+                    <div id="view-title-container" class="mb-2">
                         <h1 id="main-title">Market Summary</h1>
-                        <p class="text-secondary">Track the performance of user-created currencies.</p>
+                        <p id="main-subtitle" class="text-secondary">Track the performance of user-created currencies.</p>
                     </div>
 
-                    <!-- Market Data Table (Yahoo Finance Style) -->
+                    <!-- Market View -->
                     <div id="market-view" class="post-card">
                         <div class="post-header">
                             <h3 class="font-bold">Active Currencies</h3>
-                            <button class="btn btn-ghost btn-sm">View All</button>
                         </div>
                         <div class="post-body">
                             <table class="data-table">
@@ -97,16 +91,11 @@
                                         <th>Symbol</th>
                                         <th>Name</th>
                                         <th>Price</th>
-                                        <th>Change</th>
-                                        <th>Volume</th>
                                         <th>Action</th>
                                     </tr>
                                 </thead>
                                 <tbody id="market-table-body">
-                                    <!-- Dynamic rows -->
-                                    <tr>
-                                        <td colspan="6" class="text-center py-2">Loading market data...</td>
-                                    </tr>
+                                    <tr><td colspan="4" class="text-center py-2 text-dim">No currencies found.</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -115,23 +104,24 @@
                     <!-- Portfolio View -->
                     <div id="portfolio-view" style="display: none;">
                         <div class="post-card">
-                            <div class="post-header">
-                                <h3 class="font-bold">Your Holdings</h3>
-                            </div>
+                            <div class="post-header"><h3 class="font-bold">Your Assets</h3></div>
                             <div class="post-body">
                                 <table class="data-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Asset</th>
-                                            <th>Shares</th>
-                                            <th>Avg Price</th>
-                                            <th>Market Value</th>
-                                            <th>P/L</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="portfolio-table-body">
-                                        <!-- Dynamic rows -->
-                                    </tbody>
+                                    <thead><tr><th>Asset</th><th>Shares</th><th>Value</th></tr></thead>
+                                    <tbody id="portfolio-table-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Leaderboard View -->
+                    <div id="leaderboard-view" style="display: none;">
+                        <div class="post-card">
+                            <div class="post-header"><h3 class="font-bold">Top Investors</h3></div>
+                            <div class="post-body">
+                                <table class="data-table">
+                                    <thead><tr><th>Rank</th><th>User</th><th>Points</th></tr></thead>
+                                    <tbody id="leaderboard-table-body"></tbody>
                                 </table>
                             </div>
                         </div>
@@ -139,20 +129,19 @@
                 </div>
             </main>
 
-            <!-- Right Panel (Yahoo Watchlist Style) -->
+            <!-- Right Panel -->
             <aside class="right-panel">
                 <div class="panel-section">
                     <h3 class="mb-1 font-bold">Trending Assets</h3>
                     <div id="trending-list">
-                        <!-- Dynamic trending -->
-                        <p class="text-dim text-sm">Searching for hot tokens...</p>
+                        <p class="text-dim text-sm">No trending assets yet.</p>
                     </div>
                 </div>
 
                 <div class="panel-section">
-                    <h3 class="mb-1 font-bold">Market Points</h3>
+                    <h3 class="mb-1 font-bold">Account Balance</h3>
                     <div class="flex justify-between align-center p-1 bg-body rounded">
-                        <span class="text-secondary">Your Balance</span>
+                        <span class="text-secondary">Points</span>
                         <span id="user-points-display" class="font-bold">0 pts</span>
                     </div>
                 </div>
@@ -178,19 +167,43 @@
         </div>
     </div>
 
-    <div id="modal-launch" class="modal-overlay">
-        <div class="modal">
+    <!-- Settings Modal -->
+    <div id="modal-settings" class="modal-overlay">
+        <div class="modal" style="max-width: 500px;">
             <div class="modal-header">
-                <h3>Launch New Currency</h3>
+                <h3>Customize Profile</h3>
                 <i data-lucide="x" class="btn-close cursor-pointer"></i>
             </div>
             <div class="modal-body">
+                <div id="profile-preview" class="mb-2" style="border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border);">
+                    <div id="preview-banner" style="height: 100px; background: var(--bg-hover); background-size: cover;"></div>
+                    <div class="p-1 flex align-center gap-1">
+                        <img id="preview-avatar" src="" style="width: 60px; height: 60px; border-radius: 50%; margin-top: -30px; border: 3px solid var(--bg-card); background: var(--primary);">
+                        <div class="font-bold" id="preview-username">Username</div>
+                    </div>
+                </div>
+                <form id="form-settings">
+                    <label class="text-xs text-dim uppercase font-bold">Avatar URL</label>
+                    <input type="text" id="settings-avatar" placeholder="https://image.com/pfp.png">
+                    <label class="text-xs text-dim uppercase font-bold">Banner URL</label>
+                    <input type="text" id="settings-banner" placeholder="https://image.com/banner.png">
+                    <label class="text-xs text-dim uppercase font-bold">Bio</label>
+                    <input type="text" id="settings-bio" placeholder="Tell us about yourself">
+                    <button type="submit" class="btn btn-primary w-full">Save Changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Other modals (Launch, Trade) remain similar -->
+    <div id="modal-launch" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header"><h3>Launch Token</h3><i data-lucide="x" class="btn-close cursor-pointer"></i></div>
+            <div class="modal-body">
                 <form id="form-launch">
-                    <label class="text-xs text-dim uppercase font-bold">Token Name</label>
-                    <input type="text" id="launch-name" required placeholder="e.g. Creator Coin">
-                    <label class="text-xs text-dim uppercase font-bold">Symbol (MAX 5)</label>
-                    <input type="text" id="launch-symbol" required maxlength="5" placeholder="CREAT">
-                    <button type="submit" class="btn btn-primary w-full">Launch Token</button>
+                    <input type="text" id="launch-name" required placeholder="Token Name">
+                    <input type="text" id="launch-symbol" required maxlength="5" placeholder="SYMBOL">
+                    <button type="submit" class="btn btn-primary w-full">Launch</button>
                 </form>
             </div>
         </div>
@@ -198,22 +211,11 @@
 
     <div id="modal-trade" class="modal-overlay">
         <div class="modal">
-            <div class="modal-header">
-                <h3 id="trade-title">Buy Asset</h3>
-                <i data-lucide="x" class="btn-close cursor-pointer"></i>
-            </div>
+            <div class="modal-header"><h3>Buy Asset</h3><i data-lucide="x" class="btn-close cursor-pointer"></i></div>
             <div class="modal-body">
-                <div class="flex justify-between mb-2">
-                    <span class="text-secondary">Market Price</span>
-                    <span id="trade-market-price" class="font-bold">0 pts</span>
-                </div>
-                <label class="text-xs text-dim uppercase font-bold">Shares to Buy</label>
+                <div class="flex justify-between mb-2"><span>Price</span><span id="trade-market-price" class="font-bold">0 pts</span></div>
                 <input type="number" id="trade-shares" value="1" min="1">
-                <div class="flex justify-between mb-2">
-                    <span class="text-secondary">Estimated Total</span>
-                    <span id="trade-estimated-total" class="font-bold">0 pts</span>
-                </div>
-                <button id="btn-confirm-trade" class="btn btn-primary w-full">Confirm Transaction</button>
+                <button id="btn-confirm-trade" class="btn btn-primary w-full">Confirm Buy</button>
             </div>
         </div>
     </div>
