@@ -234,7 +234,8 @@
 
             const user = els.username.value.trim();
             const pass = els.password.value;
-            const email = `${user.toLowerCase()}@nozus.internal`;
+            // Use a more standard-looking fake domain to bypass strict validation
+            const email = `${user.toLowerCase()}@nozus-exchange.com`;
 
             try {
                 // Key Validation for Supabase
@@ -276,7 +277,14 @@
                 window.location.href = 'index.html';
             } catch (err) {
                 console.error("AUTH ERROR:", err);
-                els.errorDisplay.innerHTML = err.message || "Unknown connection error.";
+                let message = err.message || "Unknown connection error.";
+                
+                if (message.includes("confirmation")) {
+                    message = "<b>SIGNUP FAILED:</b> Email confirmation is enabled in your Supabase settings.<br><br>";
+                    message += "To fix this, go to your <b>Supabase Dashboard</b> > <b>Authentication</b> > <b>Settings</b> and <b>uncheck</b> 'Confirm email'.";
+                }
+                
+                els.errorDisplay.innerHTML = message;
                 els.errorDisplay.style.display = 'block';
             } finally {
                 els.submitBtn.disabled = false;
