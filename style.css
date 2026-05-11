@@ -1,24 +1,24 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Geist+Mono:wght@400;700&display=swap');
 
 :root {
-    /* Color Palette - Modern Finance (Slate & Navy) */
-    --bg-body: #0f172a;
-    --bg-card: #1e293b;
-    --bg-header: #1e293b;
-    --bg-sidebar: #0f172a;
-    --bg-hover: #334155;
+    /* Color Palette - Light Mode Finance (Facebook/Yahoo style) */
+    --bg-body: #f0f2f5;
+    --bg-card: #ffffff;
+    --bg-header: #ffffff;
+    --bg-sidebar: #f0f2f5;
+    --bg-hover: #e4e6eb;
     
-    --border: #334155;
-    --border-light: rgba(255, 255, 255, 0.05);
+    --border: #dddfe2;
+    --border-light: #ebedf0;
     
     --fb-blue: #0866ff;
     --yahoo-purple: #7e3ff2;
-    --accent-green: #22c55e;
-    --accent-red: #ef4444;
+    --accent-green: #00873c;
+    --accent-red: #d93025;
     
-    --text-main: #f8fafc;
-    --text-secondary: #94a3b8;
-    --text-dim: #64748b;
+    --text-main: #050505;
+    --text-secondary: #65676b;
+    --text-dim: #8a8d91;
     
     --radius-sm: 4px;
     --radius-md: 8px;
@@ -55,10 +55,10 @@ body {
     height: 100vh;
 }
 
-/* Header & Ticker */
 header {
     background: var(--bg-header);
     border-bottom: 1px solid var(--border);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
     z-index: 100;
 }
 
@@ -86,8 +86,8 @@ header {
 
 .search-container input {
     width: 100%;
-    background: #0f172a;
-    border: 1px solid var(--border);
+    background: #f0f2f5;
+    border: none;
     border-radius: 20px;
     padding: 0.5rem 1rem 0.5rem 2.5rem;
     color: var(--text-main);
@@ -105,7 +105,7 @@ header {
 
 .market-ticker {
     height: var(--ticker-height);
-    background: #020617;
+    background: #ffffff;
     border-bottom: 1px solid var(--border);
     display: flex;
     align-items: center;
@@ -144,20 +144,7 @@ header {
     width: var(--sidebar-width);
     padding: 1rem;
     overflow-y: auto;
-    border-right: 1px solid var(--border);
-}
-
-.nav-group {
-    margin-bottom: 2rem;
-}
-
-.nav-label {
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-    padding-left: 0.75rem;
+    background: var(--bg-sidebar);
 }
 
 .nav-link {
@@ -166,87 +153,61 @@ header {
     gap: 0.75rem;
     padding: 0.6rem 0.75rem;
     border-radius: var(--radius-md);
-    color: var(--text-secondary);
+    color: var(--text-main);
     text-decoration: none;
     cursor: pointer;
     transition: var(--transition);
+    font-weight: 500;
 }
 
 .nav-link:hover, .nav-link.active {
     background: var(--bg-hover);
-    color: var(--text-main);
 }
 
-.nav-link i { width: 20px; }
+.nav-link.active {
+    color: var(--fb-blue);
+}
 
 /* Feed Area */
 .feed-area {
     flex: 1;
-    background: #020617;
+    background: var(--bg-body);
     overflow-y: auto;
     padding: 1.5rem;
 }
 
 .feed-container {
-    max-width: 800px;
+    max-width: 740px;
     margin: 0 auto;
 }
 
-/* Cards (Facebook Style) */
+/* Cards */
 .post-card {
     background: var(--bg-card);
-    border: 1px solid var(--border);
     border-radius: var(--radius-md);
     margin-bottom: 1rem;
-    overflow: hidden;
-}
-
-.post-header {
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
     padding: 1rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
 }
 
-.post-user {
-    display: flex;
-    gap: 0.75rem;
-    align-items: center;
-}
-
-.avatar {
-    width: 40px;
-    height: 40px;
-    background: var(--fb-blue);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-}
-
-.post-body {
-    padding: 0 1rem 1rem;
-}
-
-/* Yahoo Finance Data Table */
 .data-table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 1rem;
     font-size: 0.9rem;
 }
 
 .data-table th {
     text-align: left;
-    color: var(--text-dim);
-    padding: 0.5rem;
-    border-bottom: 1px solid var(--border);
+    color: var(--text-secondary);
+    padding: 0.75rem 0.5rem;
+    border-bottom: 1px solid var(--border-light);
     font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
 }
 
 .data-table td {
-    padding: 0.75rem 0.5rem;
+    padding: 1rem 0.5rem;
     border-bottom: 1px solid var(--border-light);
 }
 
@@ -256,12 +217,35 @@ header {
     font-weight: 700;
 }
 
+/* Buttons */
+.btn {
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.btn-primary { background: var(--fb-blue); color: white; }
+.btn-primary:hover { background: #075ce5; }
+
+.btn-secondary { background: var(--bg-hover); color: var(--text-main); }
+.btn-secondary:hover { background: #d8dadf; }
+
+.btn-ghost { background: transparent; color: var(--text-secondary); }
+.btn-ghost:hover { background: var(--bg-hover); }
+
 /* Right Panel */
 .right-panel {
     width: var(--right-panel-width);
-    border-left: 1px solid var(--border);
     padding: 1rem;
     overflow-y: auto;
+    background: var(--bg-sidebar);
 }
 
 .panel-section {
@@ -269,44 +253,15 @@ header {
     border-radius: var(--radius-md);
     padding: 1rem;
     margin-bottom: 1rem;
-    border: 1px solid var(--border);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-/* Auth / Profile Area */
-.profile-pill {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: var(--bg-hover);
-    padding: 0.25rem 0.75rem;
-    border-radius: 20px;
-    cursor: pointer;
-}
-
-/* Buttons */
-.btn {
-    padding: 0.5rem 1rem;
-    border-radius: var(--radius-sm);
-    font-weight: 600;
-    cursor: pointer;
-    border: none;
-    transition: var(--transition);
-}
-
-.btn-primary { background: var(--fb-blue); color: white; }
-.btn-primary:hover { opacity: 0.9; }
-
-.btn-ghost { background: transparent; color: var(--text-secondary); }
-.btn-ghost:hover { background: var(--bg-hover); }
-
-/* Trading Modal */
+/* Modals */
 .modal-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.75);
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(4px);
     display: none;
     align-items: center;
     justify-content: center;
@@ -316,38 +271,67 @@ header {
 .modal {
     background: var(--bg-card);
     width: 100%;
-    max-width: 400px;
+    max-width: 440px;
     border-radius: var(--radius-md);
-    border: 1px solid var(--border);
-    overflow: hidden;
-}
-
-.modal-header {
-    padding: 1rem;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    justify-content: space-between;
-}
-
-.modal-body {
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
     padding: 1.5rem;
 }
 
-input[type="number"], input[type="text"], input[type="password"] {
+input {
     width: 100%;
-    background: #0f172a;
+    background: #f0f2f5;
     border: 1px solid var(--border);
     padding: 0.75rem;
-    color: var(--text-main);
-    border-radius: var(--radius-sm);
+    border-radius: 6px;
     margin-bottom: 1rem;
     outline: none;
+    color: var(--text-main);
 }
 
-.trend-up { color: var(--accent-green); }
-.trend-down { color: var(--accent-red); }
+input:focus {
+    border-color: var(--fb-blue);
+    box-shadow: 0 0 0 2px rgba(8, 102, 255, 0.1);
+}
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+.trend-up { color: var(--accent-green); font-weight: 600; }
+.trend-down { color: var(--accent-red); font-weight: 600; }
+
+/* Profile Info */
+.profile-pill {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--bg-hover);
+    padding: 0.25rem 0.5rem;
+    border-radius: 20px;
+    cursor: pointer;
+}
+
+.avatar {
+    background: var(--fb-blue);
+    color: white;
+    font-weight: 700;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Auth Page specific */
+.auth-container {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f0f2f5;
+}
+
+.auth-card {
+    background: #fff;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 8px 16px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+}

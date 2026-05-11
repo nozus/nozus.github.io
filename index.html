@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nozus | Finance & Social</title>
+    <title>Nozus | Social Exchange</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -16,25 +16,24 @@
                 <div class="logo">nozus</div>
                 <div class="search-container">
                     <i data-lucide="search"></i>
-                    <input type="text" placeholder="Search for symbols, people, or news...">
+                    <input type="text" placeholder="Search tokens or people...">
                 </div>
                 <div class="user-actions">
                     <div id="auth-section">
-                        <button id="btn-login-trigger" class="btn btn-primary">Sign In</button>
+                        <a href="auth.html" class="btn btn-primary" style="text-decoration: none;">Sign In</a>
                     </div>
                     <div id="user-profile-pill" class="profile-pill" style="display: none;">
-                        <img id="nav-avatar" src="" style="width: 24px; height: 24px; border-radius: 50%; display: none;">
-                        <div class="avatar" id="nav-initials">U</div>
+                        <img id="nav-avatar" src="" style="width: 28px; height: 28px; border-radius: 50%; display: none;">
+                        <div class="avatar" id="nav-initials" style="width: 28px; height: 28px; font-size: 12px;">U</div>
                         <span id="nav-username" class="font-bold">Username</span>
                         <i data-lucide="chevron-down" style="width: 16px;"></i>
                     </div>
                 </div>
             </div>
-            <!-- Yahoo Style Ticker -->
+            <!-- Market Ticker -->
             <div class="market-ticker">
                 <div class="ticker-content" id="ticker-data">
                     <div class="ticker-item"><span>$NZS</span> <span class="trend-up">10.00 (+0.0%)</span></div>
-                    <!-- Duplicate items for scroll -->
                 </div>
             </div>
         </header>
@@ -42,12 +41,12 @@
         <div class="main-layout">
             <!-- Left Sidebar -->
             <aside class="sidebar">
-                <div class="nav-group">
+                <div class="nav-group mb-2">
                     <div class="nav-link active" id="view-market-trigger">
-                        <i data-lucide="bar-chart-2"></i> <span>Market Data</span>
+                        <i data-lucide="layout-grid"></i> <span>Market</span>
                     </div>
                     <div class="nav-link" id="view-portfolio-trigger">
-                        <i data-lucide="wallet"></i> <span>My Portfolio</span>
+                        <i data-lucide="pie-chart"></i> <span>Portfolio</span>
                     </div>
                     <div class="nav-link" id="view-leaderboard-trigger">
                         <i data-lucide="trophy"></i> <span>Leaderboard</span>
@@ -55,7 +54,7 @@
                 </div>
 
                 <div class="nav-group">
-                    <div class="nav-label">Shortcuts</div>
+                    <div class="nav-label mb-1" style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-dim); padding-left: 0.75rem;">Shortcuts</div>
                     <div class="nav-link" id="btn-launch-trigger">
                         <i data-lucide="plus-circle"></i> <span>Launch Token</span>
                     </div>
@@ -64,67 +63,52 @@
                     </div>
                 </div>
 
-                <div class="nav-group" style="margin-top: auto;">
+                <div class="nav-group" style="margin-top: auto; padding-bottom: 1rem;">
                     <div id="logout-link" class="nav-link" style="display: none;">
                         <i data-lucide="log-out"></i> <span>Sign Out</span>
                     </div>
                 </div>
             </aside>
 
-            <!-- Feed Area -->
+            <!-- Main Content -->
             <main class="feed-area">
                 <div class="feed-container">
-                    <div id="view-title-container" class="mb-2">
-                        <h1 id="main-title">Market Summary</h1>
-                        <p id="main-subtitle" class="text-secondary">Track the performance of user-created currencies.</p>
+                    <div id="main-header" class="mb-2">
+                        <h1 id="main-title" style="font-size: 1.5rem; font-weight: 700;">Market Summary</h1>
+                        <p id="main-subtitle" class="text-secondary">Explore user-created tokens and personal currencies.</p>
                     </div>
 
                     <!-- Market View -->
                     <div id="market-view" class="post-card">
-                        <div class="post-header">
-                            <h3 class="font-bold">Active Currencies</h3>
-                        </div>
-                        <div class="post-body">
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>Symbol</th>
-                                        <th>Name</th>
-                                        <th>Price</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="market-table-body">
-                                    <tr><td colspan="4" class="text-center py-2 text-dim">No currencies found.</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Symbol</th>
+                                    <th>Name</th>
+                                    <th>Price</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="market-table-body">
+                                <tr><td colspan="4" class="text-center py-2 text-dim">Fetching market data...</td></tr>
+                            </tbody>
+                        </table>
                     </div>
 
                     <!-- Portfolio View -->
-                    <div id="portfolio-view" style="display: none;">
-                        <div class="post-card">
-                            <div class="post-header"><h3 class="font-bold">Your Assets</h3></div>
-                            <div class="post-body">
-                                <table class="data-table">
-                                    <thead><tr><th>Asset</th><th>Shares</th><th>Value</th></tr></thead>
-                                    <tbody id="portfolio-table-body"></tbody>
-                                </table>
-                            </div>
-                        </div>
+                    <div id="portfolio-view" style="display: none;" class="post-card">
+                        <table class="data-table">
+                            <thead><tr><th>Asset</th><th>Shares</th><th>Market Value</th></tr></thead>
+                            <tbody id="portfolio-table-body"></tbody>
+                        </table>
                     </div>
 
                     <!-- Leaderboard View -->
-                    <div id="leaderboard-view" style="display: none;">
-                        <div class="post-card">
-                            <div class="post-header"><h3 class="font-bold">Top Investors</h3></div>
-                            <div class="post-body">
-                                <table class="data-table">
-                                    <thead><tr><th>Rank</th><th>User</th><th>Points</th></tr></thead>
-                                    <tbody id="leaderboard-table-body"></tbody>
-                                </table>
-                            </div>
-                        </div>
+                    <div id="leaderboard-view" style="display: none;" class="post-card">
+                        <table class="data-table">
+                            <thead><tr><th>Rank</th><th>Investor</th><th>Total Points</th></tr></thead>
+                            <tbody id="leaderboard-table-body"></tbody>
+                        </table>
                     </div>
                 </div>
             </main>
@@ -132,15 +116,15 @@
             <!-- Right Panel -->
             <aside class="right-panel">
                 <div class="panel-section">
-                    <h3 class="mb-1 font-bold">Trending Assets</h3>
+                    <h3 class="mb-1" style="font-size: 1rem; font-weight: 700;">Trending</h3>
                     <div id="trending-list">
-                        <p class="text-dim text-sm">No trending assets yet.</p>
+                        <p class="text-dim text-sm">Loading trending tokens...</p>
                     </div>
                 </div>
 
-                <div class="panel-section">
-                    <h3 class="mb-1 font-bold">Account Balance</h3>
-                    <div class="flex justify-between align-center p-1 bg-body rounded">
+                <div id="balance-panel" class="panel-section" style="display: none;">
+                    <h3 class="mb-1" style="font-size: 1rem; font-weight: 700;">My Balance</h3>
+                    <div class="flex justify-between align-center p-1" style="background: var(--bg-body); border-radius: 8px;">
                         <span class="text-secondary">Points</span>
                         <span id="user-points-display" class="font-bold">0 pts</span>
                     </div>
@@ -149,74 +133,44 @@
         </div>
     </div>
 
-    <!-- Modals -->
-    <div id="modal-auth" class="modal-overlay">
-        <div class="modal">
-            <div class="modal-header">
-                <h3 id="auth-title">Sign In to Nozus</h3>
-                <i data-lucide="x" class="btn-close cursor-pointer"></i>
-            </div>
-            <div class="modal-body">
-                <form id="form-auth">
-                    <input type="text" id="auth-username" required placeholder="Username">
-                    <input type="password" id="auth-password" required placeholder="Password">
-                    <button type="submit" class="btn btn-primary w-full">Continue</button>
-                    <button type="button" id="btn-toggle-auth" class="btn btn-ghost w-full mt-1">Create an account</button>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Settings Modal -->
+    <!-- Modals (Settings, Launch, Trade) -->
     <div id="modal-settings" class="modal-overlay">
-        <div class="modal" style="max-width: 500px;">
-            <div class="modal-header">
-                <h3>Customize Profile</h3>
+        <div class="modal">
+            <div class="flex justify-between align-center mb-2">
+                <h3 style="font-size: 1.25rem;">Profile Settings</h3>
                 <i data-lucide="x" class="btn-close cursor-pointer"></i>
             </div>
-            <div class="modal-body">
-                <div id="profile-preview" class="mb-2" style="border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border);">
-                    <div id="preview-banner" style="height: 100px; background: var(--bg-hover); background-size: cover;"></div>
-                    <div class="p-1 flex align-center gap-1">
-                        <img id="preview-avatar" src="" style="width: 60px; height: 60px; border-radius: 50%; margin-top: -30px; border: 3px solid var(--bg-card); background: var(--primary);">
-                        <div class="font-bold" id="preview-username">Username</div>
-                    </div>
-                </div>
-                <form id="form-settings">
-                    <label class="text-xs text-dim uppercase font-bold">Avatar URL</label>
-                    <input type="text" id="settings-avatar" placeholder="https://image.com/pfp.png">
-                    <label class="text-xs text-dim uppercase font-bold">Banner URL</label>
-                    <input type="text" id="settings-banner" placeholder="https://image.com/banner.png">
-                    <label class="text-xs text-dim uppercase font-bold">Bio</label>
-                    <input type="text" id="settings-bio" placeholder="Tell us about yourself">
-                    <button type="submit" class="btn btn-primary w-full">Save Changes</button>
-                </form>
-            </div>
+            <form id="form-settings">
+                <label class="text-xs font-bold uppercase text-dim">Avatar URL</label>
+                <input type="text" id="settings-avatar" placeholder="https://...">
+                <label class="text-xs font-bold uppercase text-dim">Banner URL</label>
+                <input type="text" id="settings-banner" placeholder="https://...">
+                <label class="text-xs font-bold uppercase text-dim">Bio</label>
+                <input type="text" id="settings-bio" placeholder="Trading my way up.">
+                <button type="submit" class="btn btn-primary w-full">Update Profile</button>
+            </form>
         </div>
     </div>
 
-    <!-- Other modals (Launch, Trade) remain similar -->
     <div id="modal-launch" class="modal-overlay">
         <div class="modal">
-            <div class="modal-header"><h3>Launch Token</h3><i data-lucide="x" class="btn-close cursor-pointer"></i></div>
-            <div class="modal-body">
-                <form id="form-launch">
-                    <input type="text" id="launch-name" required placeholder="Token Name">
-                    <input type="text" id="launch-symbol" required maxlength="5" placeholder="SYMBOL">
-                    <button type="submit" class="btn btn-primary w-full">Launch</button>
-                </form>
-            </div>
+            <div class="flex justify-between align-center mb-2"><h3>Launch Token</h3><i data-lucide="x" class="btn-close cursor-pointer"></i></div>
+            <form id="form-launch">
+                <input type="text" id="launch-name" required placeholder="Token Name">
+                <input type="text" id="launch-symbol" required maxlength="5" placeholder="SYMBOL">
+                <button type="submit" class="btn btn-primary w-full">Go Live</button>
+            </form>
         </div>
     </div>
 
     <div id="modal-trade" class="modal-overlay">
         <div class="modal">
-            <div class="modal-header"><h3>Buy Asset</h3><i data-lucide="x" class="btn-close cursor-pointer"></i></div>
-            <div class="modal-body">
-                <div class="flex justify-between mb-2"><span>Price</span><span id="trade-market-price" class="font-bold">0 pts</span></div>
-                <input type="number" id="trade-shares" value="1" min="1">
-                <button id="btn-confirm-trade" class="btn btn-primary w-full">Confirm Buy</button>
+            <div class="flex justify-between align-center mb-2"><h3 id="trade-title">Buy Asset</h3><i data-lucide="x" class="btn-close cursor-pointer"></i></div>
+            <div class="p-1 mb-2" style="background: var(--bg-body); border-radius: 8px;">
+                <div class="flex justify-between"><span>Price</span><span id="trade-market-price" class="font-bold">0 pts</span></div>
             </div>
+            <input type="number" id="trade-shares" value="1" min="1">
+            <button id="btn-confirm-trade" class="btn btn-primary w-full">Confirm Buy</button>
         </div>
     </div>
 
