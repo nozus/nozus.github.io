@@ -1,293 +1,232 @@
 import { supabase } from './supabase-client.js';
 
-// Application State
+// App State
 let state = {
     user: null,
     profile: null,
     currencies: [],
     leaderboard: [],
-    currentView: 'market'
+    view: 'market'
 };
 
-// UI Mapping
 const els = {
-    marketTableBody: document.getElementById('market-table-body'),
-    portfolioTableBody: document.getElementById('portfolio-table-body'),
-    leaderboardTableBody: document.getElementById('leaderboard-table-body'),
-    trendingList: document.getElementById('trending-list'),
-    marketView: document.getElementById('market-view'),
-    portfolioView: document.getElementById('portfolio-view'),
-    leaderboardView: document.getElementById('leaderboard-view'),
-    authSection: document.getElementById('auth-section'),
-    balancePanel: document.getElementById('balance-panel'),
-    userProfilePill: document.getElementById('user-profile-pill'),
+    marketBody: document.getElementById('market-body'),
+    portfolioBody: document.getElementById('portfolio-body'),
+    leaderboardBody: document.getElementById('leaderboard-body'),
+    userDisplay: document.getElementById('user-display'),
     navUsername: document.getElementById('nav-username'),
     navAvatar: document.getElementById('nav-avatar'),
     navInitials: document.getElementById('nav-initials'),
-    userPointsDisplay: document.getElementById('user-points-display'),
-    logoutLink: document.getElementById('logout-link'),
+    userPoints: document.getElementById('user-points'),
     mainTitle: document.getElementById('main-title'),
     mainSubtitle: document.getElementById('main-subtitle'),
     
-    // Modals
-    modalLaunch: document.getElementById('modal-launch'),
-    modalTrade: document.getElementById('modal-trade'),
-    modalSettings: document.getElementById('modal-settings'),
+    // Areas
+    marketArea: document.getElementById('market-area'),
+    portfolioArea: document.getElementById('portfolio-area'),
+    leaderboardArea: document.getElementById('leaderboard-area'),
     
-    // Trade Modal
-    tradeMarketPrice: document.getElementById('trade-market-price'),
-    tradeShares: document.getElementById('trade-shares')
+    // Modals
+    modalSettings: document.getElementById('modal-settings'),
+    modalLaunch: document.getElementById('modal-launch'),
+    modalTrade: document.getElementById('modal-trade')
 };
 
-// Initialization
 async function init() {
-    setupEventListeners();
-    await checkUser();
-    await fetchCurrencies();
-    await fetchLeaderboard();
-    subscribeToUpdates();
+    console.log("Initializing Nozus App...");
+    setupListeners();
+    await checkSession();
+    await refreshData();
+    subscribe();
 }
 
-async function checkUser() {
+async function checkSession() {
     try {
         const { data: { user }, error } = await supabase.auth.getUser();
         if (error) throw error;
-        
         if (user) {
             state.user = user;
             await fetchProfile(user.id);
-            updateAuthUI();
+            updateUI();
+        } else {
+            console.warn("No user session found. Redirecting...");
+            window.location.href = 'auth.html';
         }
-    } catch (err) {
-        console.error("Auth check failed:", err.message);
+    } catch (e) {
+        console.error("Auth check failed:", e.message);
     }
 }
 
-async function fetchProfile(userId) {
-    const { data } = await supabase.from('profiles').select('*').eq('id', userId).single();
+async function fetchProfile(uid) {
+    const { data, error } = await supabase.from('profiles').select('*').eq('id', uid).single();
     if (data) state.profile = data;
+    else if (error) console.error("Profile fetch error:", error);
 }
 
-async function fetchCurrencies() {
+async function refreshData() {
     try {
-        const { data, error } = await supabase.from('currencies').select('*').order('created_at', { ascending: false });
-        if (error) throw error;
-        if (data) {
-            state.currencies = data;
+        const { data: c, error: cError } = await supabase.from('currencies').select('*').order('created_at', { ascending: false });
+        if (cError) throw cError;
+        if (c) {
+            state.currencies = c;
             renderMarket();
-            renderTrending();
             updateTicker();
         }
-    } catch (err) {
-        console.error("Failed to fetch currencies:", err.message);
-        if (els.marketTableBody) els.marketTableBody.innerHTML = `<tr><td colspan="4" class="text-center py-2 text-accent-red">Error: ${err.message}. Check your Supabase config.</td></tr>`;
-    }
-}
 
-async function fetchLeaderboard() {
-    const { data } = await supabase.from('profiles').select('username, points, avatar_url').order('points', { ascending: false }).limit(10);
-    if (data) {
-        state.leaderboard = data;
-        renderLeaderboard();
+        const { data: l, error: lError } = await supabase.from('profiles').select('*').order('points', { ascending: false }).limit(10);
+        if (lError) throw lError;
+        if (l) {
+            state.leaderboard = l;
+            renderLeaderboard();
+        }
+    } catch (err) {
+        console.error("Data refresh failed:", err.message);
+        if (els.marketBody) {
+            els.marketBody.innerHTML = `<tr><td colspan="4" class="text-center py-2 text-danger">Connection Error: ${err.message}. Please check your Supabase keys.</td></tr>`;
+        }
     }
 }
 
 // Rendering
 function renderMarket() {
-    if (!els.marketTableBody) return;
-    if (state.currencies.length === 0) {
-        els.marketTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-2 text-dim">No tokens active. Be the first!</td></tr>';
-        return;
-    }
-    els.marketTableBody.innerHTML = state.currencies.map(c => `
+    if (!els.marketBody) return;
+    els.marketBody.innerHTML = state.currencies.map(c => `
         <tr>
-            <td><span class="symbol-tag">$${c.symbol}</span></td>
+            <td><span class="font-bold text-primary">$${c.symbol}</span></td>
             <td>${c.name}</td>
             <td class="font-bold">${c.current_price} pts</td>
             <td>
-                <button class="btn btn-secondary btn-sm btn-trade-trigger" 
-                    data-id="${c.id}" data-name="${c.name}" data-price="${c.current_price}">
-                    Trade
-                </button>
+                <button class="btn btn-primary btn-trade-trigger" data-id="${c.id}" data-name="${c.name}" data-price="${c.current_price}">Trade</button>
             </td>
         </tr>
     `).join('');
 }
 
 function renderLeaderboard() {
-    if (!els.leaderboardTableBody) return;
-    els.leaderboardTableBody.innerHTML = state.leaderboard.map((u, i) => `
+    if (!els.leaderboardBody) return;
+    els.leaderboardBody.innerHTML = state.leaderboard.map((u, i) => `
         <tr>
-            <td><span class="font-bold">#${i + 1}</span></td>
-            <td>
-                <div class="flex align-center gap-1">
-                    ${u.avatar_url ? `<img src="${u.avatar_url}" style="width: 24px; height: 24px; border-radius: 50%;">` : `<div class="avatar" style="width: 24px; height: 24px; font-size: 10px;">${u.username[0].toUpperCase()}</div>`}
-                    <span>${u.username}</span>
-                </div>
-            </td>
+            <td>#${i+1}</td>
+            <td>${u.username}</td>
             <td class="font-bold">${u.points} pts</td>
         </tr>
     `).join('');
 }
 
-function renderTrending() {
-    if (!els.trendingList) return;
-    const trending = state.currencies.slice(0, 3);
-    if (trending.length === 0) {
-        els.trendingList.innerHTML = '<p class="text-dim text-sm">Nothing trending.</p>';
-        return;
-    }
-    els.trendingList.innerHTML = trending.map(c => `
-        <div class="flex justify-between align-center py-1" style="border-bottom: 1px solid var(--border-light);">
-            <div class="flex align-center gap-1">
-                <span class="symbol-tag">$${c.symbol}</span>
-                <span class="text-sm">${c.name}</span>
-            </div>
-            <span class="trend-up">+0.0%</span>
-        </div>
-    `).join('');
-}
-
 function updateTicker() {
-    const tickerContainer = document.getElementById('ticker-data');
-    if (!tickerContainer || state.currencies.length === 0) return;
-    const items = state.currencies.slice(0, 5).map(c => `
-        <div class="ticker-item"><span>$${c.symbol}</span> <span class="trend-up">${c.current_price} (+0.0%)</span></div>
+    const container = document.getElementById('ticker-data');
+    if (!container) return;
+    const items = state.currencies.slice(0, 6).map(c => `
+        <span style="margin-right: 2rem;">$${c.symbol} <b style="color: var(--accent)">${c.current_price}</b></span>
     `).join('');
-    tickerContainer.innerHTML = items + items;
+    container.innerHTML = items + items;
 }
 
-function updateAuthUI() {
-    if (state.user && state.profile) {
-        els.authSection.style.display = 'none';
-        els.balancePanel.style.display = 'block';
-        els.userProfilePill.style.display = 'flex';
-        els.logoutLink.style.display = 'flex';
+function updateUI() {
+    if (state.profile) {
+        els.userDisplay.style.display = 'flex';
         els.navUsername.innerText = state.profile.username;
-        els.userPointsDisplay.innerText = `${state.profile.points} pts`;
-        
+        els.userPoints.innerText = `${state.profile.points} pts`;
         if (state.profile.avatar_url) {
             els.navAvatar.src = state.profile.avatar_url;
             els.navAvatar.style.display = 'block';
             els.navInitials.style.display = 'none';
-        } else {
-            els.navAvatar.style.display = 'none';
-            els.navInitials.style.display = 'flex';
-            els.navInitials.innerText = state.profile.username[0].toUpperCase();
         }
     }
-}
-
-// Redirection helper
-function requireAuth() {
-    if (!state.user) {
-        window.location.href = 'auth.html';
-        return false;
-    }
-    return true;
 }
 
 // Events
-function setupEventListeners() {
-    document.getElementById('view-market-trigger').onclick = () => switchView('market');
-    document.getElementById('view-portfolio-trigger').onclick = () => switchView('portfolio');
-    document.getElementById('view-leaderboard-trigger').onclick = () => switchView('leaderboard');
+function setupListeners() {
+    document.getElementById('view-market').onclick = () => setView('market');
+    document.getElementById('view-portfolio').onclick = () => setView('portfolio');
+    document.getElementById('view-leaderboard').onclick = () => setView('leaderboard');
     
-    document.getElementById('btn-launch-trigger').onclick = () => {
-        if (requireAuth()) els.modalLaunch.style.display = 'flex';
-    };
-    
-    document.getElementById('btn-settings-trigger').onclick = () => {
-        if (requireAuth()) {
-            document.getElementById('settings-avatar').value = state.profile.avatar_url || '';
-            document.getElementById('settings-banner').value = state.profile.banner_url || '';
-            document.getElementById('settings-bio').value = state.profile.bio || '';
+    document.getElementById('btn-launch').onclick = () => els.modalLaunch.style.display = 'flex';
+    document.getElementById('btn-settings').onclick = () => {
+        if (state.profile) {
+            document.getElementById('set-avatar').value = state.profile.avatar_url || '';
+            document.getElementById('set-banner').value = state.profile.banner_url || '';
             els.modalSettings.style.display = 'flex';
         }
     };
+    
+    document.getElementById('btn-logout').onclick = async () => {
+        await supabase.auth.signOut();
+        window.location.href = 'auth.html';
+    };
 
-    document.querySelectorAll('.btn-close').forEach(btn => {
-        btn.onclick = () => btn.closest('.modal-overlay').style.display = 'none';
+    document.querySelectorAll('.btn-close').forEach(b => {
+        b.onclick = () => b.closest('.modal-overlay').style.display = 'none';
     });
 
     document.getElementById('form-settings').onsubmit = async (e) => {
         e.preventDefault();
         const updates = {
-            avatar_url: document.getElementById('settings-avatar').value,
-            banner_url: document.getElementById('settings-banner').value,
-            bio: document.getElementById('settings-bio').value
+            avatar_url: document.getElementById('set-avatar').value,
+            banner_url: document.getElementById('set-banner').value
         };
         const { error } = await supabase.from('profiles').update(updates).eq('id', state.user.id);
-        if (!error) { els.modalSettings.style.display = 'none'; await checkUser(); }
+        if (!error) {
+            els.modalSettings.style.display = 'none';
+            await checkSession();
+        }
     };
 
-    els.logoutLink.onclick = async () => {
-        await supabase.auth.signOut();
-        window.location.reload();
+    els.marketBody.onclick = (e) => {
+        const btn = e.target.closest('.btn-trade-trigger');
+        if (btn) {
+            const { id, name, price } = btn.dataset;
+            document.getElementById('trade-title').innerText = `Invest in ${name}`;
+            document.getElementById('trade-price').innerText = `${price} pts`;
+            els.modalTrade.dataset.id = id;
+            els.modalTrade.dataset.price = price;
+            els.modalTrade.style.display = 'flex';
+        }
     };
-
-    // Trade Triggers
-    if (els.marketTableBody) {
-        els.marketTableBody.onclick = (e) => {
-            const btn = e.target.closest('.btn-trade-trigger');
-            if (btn) {
-                if (requireAuth()) {
-                    const { id, name, price } = btn.dataset;
-                    els.modalTrade.dataset.currencyId = id;
-                    els.modalTrade.dataset.price = price;
-                    document.getElementById('trade-title').innerText = `Invest in ${name}`;
-                    els.tradeMarketPrice.innerText = `${price} pts`;
-                    els.modalTrade.style.display = 'flex';
-                }
-            }
-        };
-    }
 
     document.getElementById('btn-confirm-trade').onclick = async () => {
-        const id = els.modalTrade.dataset.currencyId;
+        const id = els.modalTrade.dataset.id;
         const price = parseInt(els.modalTrade.dataset.price);
-        const shares = parseInt(els.tradeShares.value);
-        const total = price * shares;
-        
-        if (state.profile.points < total) return alert('Insufficient points');
+        const amount = parseInt(document.getElementById('trade-amount').value);
+        const cost = price * amount;
 
-        const { error } = await supabase.from('profiles').update({ points: state.profile.points - total }).eq('id', state.user.id);
+        if (state.profile.points < cost) return alert("Insufficient points");
+
+        const { error } = await supabase.from('profiles').update({ points: state.profile.points - cost }).eq('id', state.user.id);
         if (!error) {
-            await supabase.from('transactions').insert([{ user_id: state.user.id, currency_id: id, type: 'buy', amount: shares, price_at_time: price }]);
+            await supabase.from('transactions').insert([{ user_id: state.user.id, currency_id: id, type: 'buy', amount, price_at_time: price }]);
             els.modalTrade.style.display = 'none';
-            await checkUser();
-            alert('Investment successful!');
+            await refreshData();
+            await checkSession();
+            alert("Success!");
         }
     };
 
     document.getElementById('form-launch').onsubmit = async (e) => {
         e.preventDefault();
-        const token = {
+        const t = {
             creator_id: state.user.id,
             name: document.getElementById('launch-name').value,
             symbol: document.getElementById('launch-symbol').value.toUpperCase(),
             current_price: 10
         };
-        const { error } = await supabase.from('currencies').insert([token]);
-        if (!error) { els.modalLaunch.style.display = 'none'; await fetchCurrencies(); }
-        else alert(error.message);
+        const { error } = await supabase.from('currencies').insert([t]);
+        if (!error) { els.modalLaunch.style.display = 'none'; refreshData(); }
     };
 }
 
-function switchView(view) {
-    state.currentView = view;
-    els.marketView.style.display = view === 'market' ? 'block' : 'none';
-    els.portfolioView.style.display = view === 'portfolio' ? 'block' : 'none';
-    els.leaderboardView.style.display = view === 'leaderboard' ? 'block' : 'none';
-    els.mainTitle.innerText = view === 'market' ? 'Market Summary' : view === 'portfolio' ? 'My Portfolio' : 'Global Leaderboard';
+function setView(v) {
+    state.view = v;
+    els.marketArea.style.display = v === 'market' ? 'block' : 'none';
+    els.portfolioArea.style.display = v === 'portfolio' ? 'block' : 'none';
+    els.leaderboardArea.style.display = v === 'leaderboard' ? 'block' : 'none';
     
-    document.querySelectorAll('.nav-link').forEach(link => {
-        link.classList.toggle('active', link.id === `view-${view}-trigger`);
-    });
+    els.mainTitle.innerText = v.charAt(0).toUpperCase() + v.slice(1);
+    document.querySelectorAll('.nav-link').forEach(l => l.classList.toggle('active', l.id === `view-${v}`));
 }
 
-function subscribeToUpdates() {
-    supabase.channel('public:currencies').on('postgres_changes', { event: '*', schema: 'public', table: 'currencies' }, fetchCurrencies).subscribe();
+function subscribe() {
+    supabase.channel('any').on('postgres_changes', { event: '*', schema: 'public', table: 'currencies' }, refreshData).subscribe();
 }
 
 init();

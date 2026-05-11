@@ -3,31 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nozus | Join the Exchange</title>
+    <title>Nozus | Access the Exchange</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body class="auth-container">
-    <div class="auth-card animate-fade-in">
-        <div class="logo mb-2" style="font-size: 3rem;">nozus</div>
-        <h2 id="auth-title" class="mb-1">Log In</h2>
-        <p class="text-secondary mb-2" id="auth-subtitle">Welcome back to the exchange.</p>
-        
-        <form id="form-auth">
-            <input type="text" id="auth-username" required placeholder="Username">
-            <input type="password" id="auth-password" required placeholder="Password">
-            <button type="submit" class="btn btn-primary w-full" style="padding: 0.75rem;">Continue</button>
-        </form>
-        
-        <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid var(--border);">
-        
-        <button id="btn-toggle-auth" class="btn btn-secondary w-full" style="padding: 0.75rem;">
-            Create New Account
-        </button>
-        
-        <div class="mt-2">
-            <a href="index.html" class="text-dim text-sm" style="text-decoration: none;">Back to Market</a>
+<body class="auth-page">
+    <div class="auth-grid">
+        <!-- Visual Panel -->
+        <div class="auth-visual">
+            <div class="logo-large">nozus</div>
+            <p>Trade the future. Invest in people.</p>
+        </div>
+
+        <!-- Form Panel -->
+        <div class="auth-form-container">
+            <div class="auth-card">
+                <div class="auth-tabs">
+                    <button id="tab-login" class="tab-btn active">Log In</button>
+                    <button id="tab-signup" class="tab-btn">Create Account</button>
+                </div>
+
+                <form id="form-auth">
+                    <div class="input-field">
+                        <label>Username</label>
+                        <input type="text" id="auth-username" required placeholder="Your unique handle">
+                    </div>
+                    <div class="input-field">
+                        <label>Password</label>
+                        <input type="password" id="auth-password" required placeholder="••••••••">
+                    </div>
+                    <button type="submit" id="submit-btn" class="btn btn-primary w-full">Log In to Exchange</button>
+                </form>
+                
+                <div id="auth-error" class="error-msg" style="display: none;"></div>
+            </div>
         </div>
     </div>
 
@@ -37,31 +46,39 @@
         let isSignUp = false;
         const els = {
             form: document.getElementById('form-auth'),
-            title: document.getElementById('auth-title'),
-            subtitle: document.getElementById('auth-subtitle'),
-            toggleBtn: document.getElementById('btn-toggle-auth'),
+            tabLogin: document.getElementById('tab-login'),
+            tabSignup: document.getElementById('tab-signup'),
+            submitBtn: document.getElementById('submit-btn'),
+            errorMsg: document.getElementById('auth-error'),
             username: document.getElementById('auth-username'),
             password: document.getElementById('auth-password')
         };
 
-        const toInternalEmail = (username) => `${username.toLowerCase()}@nozus.internal`;
-
-        els.toggleBtn.onclick = () => {
-            isSignUp = !isSignUp;
-            els.title.innerText = isSignUp ? 'Sign Up' : 'Log In';
-            els.subtitle.innerText = isSignUp ? 'Join the future of personal equity.' : 'Welcome back to the exchange.';
-            els.toggleBtn.innerText = isSignUp ? 'Already have an account?' : 'Create New Account';
+        const updateUI = () => {
+            els.tabLogin.classList.toggle('active', !isSignUp);
+            els.tabSignup.classList.toggle('active', isSignUp);
+            els.submitBtn.innerText = isSignUp ? 'Create Account' : 'Log In to Exchange';
+            els.errorMsg.style.display = 'none';
         };
+
+        els.tabLogin.onclick = () => { isSignUp = false; updateUI(); };
+        els.tabSignup.onclick = () => { isSignUp = true; updateUI(); };
+
+        const toInternalEmail = (username) => `${username.toLowerCase().trim()}@nozus.internal`;
 
         els.form.onsubmit = async (e) => {
             e.preventDefault();
-            const username = els.username.value;
+            els.submitBtn.disabled = true;
+            els.errorMsg.style.display = 'none';
+            
+            const username = els.username.value.trim();
             const password = els.password.value;
             const email = toInternalEmail(username);
 
             try {
                 let res;
                 if (isSignUp) {
+                    console.log("Attempting Sign Up with:", email);
                     res = await supabase.auth.signUp({ 
                         email, 
                         password, 
@@ -70,14 +87,18 @@
                     
                     if (res.error) throw res.error;
                     
-                    // Create profile
-                    const { error: pError } = await supabase
-                        .from('profiles')
-                        .insert([{ id: res.data.user.id, username, points: 1000 }]);
+                    // Profile creation is secondary.
+                    try {
+                        await supabase
+                            .from('profiles')
+                            .insert([{ id: res.data.user.id, username, points: 1000 }]);
+                    } catch (pErr) {
+                        console.warn("Profile auto-insert failed:", pErr);
+                    }
                     
-                    if (pError) throw pError;
-                    alert('Account created! Logging you in...');
+                    alert('Account created! Logging in...');
                 } else {
+                    console.log("Attempting Sign In with:", email);
                     res = await supabase.auth.signInWithPassword({ email, password });
                     if (res.error) throw res.error;
                 }
@@ -85,10 +106,26 @@
                 // Redirect to home
                 window.location.href = 'index.html';
             } catch (err) {
-                console.error(err);
-                alert(err.message || 'Failed to connect to Supabase. Check your internet or project status.');
+                console.error("CRITICAL AUTH ERROR:", err);
+                let message = err.message || "Unknown connection error.";
+                
+                if (message.toLowerCase().includes("fetch")) {
+                    message = "Connection Failed: Please verify your Supabase URL and Key in config.js. Check the browser console for details.";
+                }
+                
+                els.errorMsg.innerText = message;
+                els.errorMsg.style.display = 'block';
+            } finally {
+                els.submitBtn.disabled = false;
             }
         };
+
+        // Check if already logged in
+        const checkSession = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) window.location.href = 'index.html';
+        };
+        checkSession();
     </script>
 </body>
 </html>

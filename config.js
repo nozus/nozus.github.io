@@ -1,6 +1,7 @@
-// config.js - REPLACE WITH YOUR ACTUAL SUPABASE CREDENTIALS
+// config.js
 const CONFIG = {
-    SUPABASE_URL: 'https://YOUR_PROJECT_ID.supabase.co',
-    SUPABASE_ANON_KEY: 'YOUR_ANON_KEY'
+    SUPABASE_URL: 'https://axcigeddgguoqbqueons.supabase.co',
+    SUPABASE_ANON_KEY: 'sb_publishable_Ujl3B5NvCxZzLP_JnZwZZw_csOxpOy4'
 };
+
 export default CONFIG;
