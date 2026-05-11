@@ -4,7 +4,7 @@
 // ============================
 
 export const ICONS = {
-    'nozus_default': { name: 'nozus. OG', rarity: 'common', bg: 'linear-gradient(135deg, #6366f1, #818cf8)', symbol: 'n.', color: '#fff', free: true },
+    'nozus_default': { name: 'nozus.', rarity: 'common', bg: 'linear-gradient(135deg, #6366f1, #818cf8)', symbol: 'n.', color: '#fff', free: true },
     'chart_up': { name: 'Chart Master', rarity: 'common', bg: 'linear-gradient(135deg, #10b981, #34d399)', symbol: '📈', color: '#fff', free: true },
     'midnight': { name: 'Midnight', rarity: 'common', bg: 'linear-gradient(135deg, #1e293b, #334155)', symbol: '🌙', color: '#fff', free: true },
     'sunset': { name: 'Sunset', rarity: 'common', bg: 'linear-gradient(135deg, #f97316, #fbbf24)', symbol: '🌅', color: '#fff', free: true },
@@ -14,7 +14,7 @@ export const ICONS = {
     'diamond_hands': { name: 'Diamond Hands', rarity: 'epic', bg: 'linear-gradient(135deg, #3b82f6, #6366f1)', symbol: '💎', color: '#fff', free: false },
     'phantom': { name: 'Phantom', rarity: 'epic', bg: 'linear-gradient(135deg, #7c3aed, #a855f7)', symbol: '👻', color: '#fff', free: false },
     'golden_bull': { name: 'Golden Bull', rarity: 'legendary', bg: 'linear-gradient(135deg, #f59e0b, #fbbf24)', symbol: '🐂', color: '#fff', free: false },
-    'nozus_elite': { name: 'nozus. Elite', rarity: 'legendary', bg: 'linear-gradient(135deg, #ec4899, #f59e0b)', symbol: 'n.', color: '#fff', free: false },
+    'nozus_elite': { name: 'nozus. elite', rarity: 'legendary', bg: 'linear-gradient(135deg, #ec4899, #f59e0b)', symbol: 'n.', color: '#fff', free: false },
     'void': { name: 'Void', rarity: 'legendary', bg: 'linear-gradient(135deg, #0f172a, #7c3aed)', symbol: '🕳️', color: '#fff', free: false },
 };
 
@@ -44,11 +44,12 @@ export function renderIcon(iconId, size = 48, locked = false) {
     const isText = !icon.symbol.match(/[\u{1F000}-\u{1FFFF}]/u) && icon.symbol.length <= 3;
     const fontSize = isText ? (size * 0.4) + 'px' : (size * 0.45) + 'px';
     const fontWeight = isText ? '800' : '400';
-    const fontFamily = isText ? "'JetBrains Mono', monospace" : 'inherit';
+    const fontFamily = isText ? "'Plus Jakarta Sans', sans-serif" : 'inherit';
+    const letterSpacing = isText ? '-1.5px' : '0';
 
     return `<div class="player-icon rarity-${icon.rarity}" style="
         width:${size}px; height:${size}px; background:${icon.bg};
         border-color:${r}; font-size:${fontSize}; font-weight:${fontWeight};
-        font-family:${fontFamily}; color:${icon.color};
+        font-family:${fontFamily}; color:${icon.color}; letter-spacing:${letterSpacing};
     ">${icon.symbol}${locked ? '<div class="icon-lock">🔒</div>' : ''}</div>`;
 }
