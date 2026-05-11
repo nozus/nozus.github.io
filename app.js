@@ -5,22 +5,30 @@ let state = {
     user: null,
     profile: null,
     currencies: [],
-    investments: []
+    investments: [],
+    isSignUp: false,
+    currentView: 'market'
 };
 
-// UI Elements
+// UI Mapping
 const els = {
-    marketGrid: document.getElementById('market-grid'),
-    userInfo: document.getElementById('user-info'),
-    navActions: document.getElementById('nav-actions'),
-    btnLogin: document.getElementById('btn-login'),
-    btnCreate: document.getElementById('btn-create'),
-    userPoints: document.getElementById('user-points'),
+    marketView: document.getElementById('market-view'),
+    portfolioView: document.getElementById('portfolio-view'),
+    userDisplay: document.getElementById('user-display'),
+    btnAuthTrigger: document.getElementById('btn-auth-trigger'),
+    btnLaunchToken: document.getElementById('btn-launch-token'),
+    displayUsername: document.getElementById('display-username'),
+    displayPoints: document.getElementById('display-points'),
+    userInitials: document.getElementById('user-initials'),
     modalAuth: document.getElementById('modal-auth'),
-    modalCreate: document.getElementById('modal-create'),
+    modalLaunch: document.getElementById('modal-launch'),
     modalTrade: document.getElementById('modal-trade'),
     formAuth: document.getElementById('form-auth'),
-    formCreate: document.getElementById('form-create')
+    toggleAuth: document.getElementById('toggle-auth'),
+    authTitle: document.getElementById('auth-title'),
+    tradePrice: document.getElementById('trade-price'),
+    tradeTotal: document.getElementById('trade-total'),
+    tradeAmount: document.getElementById('trade-amount')
 };
 
 // Initialization
@@ -31,13 +39,15 @@ async function init() {
     subscribeToUpdates();
 }
 
-// Auth Logic
+// Auth Helper: Convert username to internal email for Supabase
+const toInternalEmail = (username) => `${username.toLowerCase()}@nozus.internal`;
+
 async function checkUser() {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
         state.user = user;
         await fetchProfile(user.id);
-        updateUI();
+        updateAuthUI();
     }
 }
 
@@ -51,169 +61,202 @@ async function fetchProfile(userId) {
     if (data) {
         state.profile = data;
     } else {
-        // Create profile if it doesn't exist
-        const { data: newProfile } = await supabase
-            .from('profiles')
-            .insert([{ id: userId, username: state.user.email.split('@')[0], points: 1000 }])
-            .select()
-            .single();
-        state.profile = newProfile;
+        // Fallback or retry logic
+        console.error("Profile not found for user", userId);
     }
 }
 
-// Data Fetching
 async function fetchCurrencies() {
-    const { data, error } = await supabase
-        .from('currencies')
-        .select('*')
-        .order('created_at', { ascending: false });
-    
+    const { data } = await supabase.from('currencies').select('*').order('created_at', { ascending: false });
     if (data) {
         state.currencies = data;
         renderMarket();
     }
 }
 
+// Rendering
 function renderMarket() {
-    els.marketGrid.innerHTML = state.currencies.map(c => `
-        <div class="glass-card stock-card animate-fade-in">
-            <div class="flex justify-between align-start">
-                <div>
-                    <span class="symbol">$${c.symbol}</span>
-                    <h3>${c.name}</h3>
+    els.marketView.innerHTML = state.currencies.map(c => `
+        <div class="stock-card animate-fade-in">
+            <div class="header">
+                <div class="token-icon">${c.symbol[0]}</div>
+                <div class="text-right">
+                    <div class="font-bold">$${c.symbol}</div>
+                    <div class="text-sm text-accent">+0.0%</div>
                 </div>
-                <div class="trend-up font-bold">+0.00%</div>
             </div>
-            <div class="price">${c.current_price} <span class="text-sm text-muted">pts</span></div>
-            <p class="text-sm text-muted mb-1">${c.description || 'No description available.'}</p>
-            <button class="btn btn-primary w-full btn-trade" data-id="${c.id}" data-name="${c.name}" data-price="${c.current_price}">
-                Invest Now
+            <h3>${c.name}</h3>
+            <div class="price">${c.current_price} <span class="text-sm text-dim">pts</span></div>
+            <div class="stats mb-2">
+                <span>Supply: ${c.total_supply}</span>
+            </div>
+            <button class="btn btn-primary w-full justify-center btn-trade-trigger" 
+                data-id="${c.id}" data-name="${c.name}" data-price="${c.current_price}">
+                Trade
             </button>
         </div>
     `).join('');
-
-    // Re-initialize icons in cards if needed
-    if (window.lucide) lucide.createIcons();
 }
 
-// Real-time Subscriptions
-function subscribeToUpdates() {
-    supabase
-        .channel('public:currencies')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'currencies' }, payload => {
-            console.log('Change received!', payload);
-            fetchCurrencies(); // Refresh for now, can optimize later
-        })
-        .subscribe();
-}
-
-// UI Interactions
-function updateUI() {
+function updateAuthUI() {
     if (state.user && state.profile) {
-        els.btnLogin.style.display = 'none';
-        els.userInfo.style.display = 'flex';
-        els.userPoints.innerHTML = `<i data-lucide="coins"></i> ${state.profile.points} pts`;
-        if (window.lucide) lucide.createIcons();
+        els.btnAuthTrigger.style.display = 'none';
+        els.userDisplay.style.display = 'block';
+        els.btnLaunchToken.style.display = 'flex';
+        els.displayUsername.innerText = state.profile.username;
+        els.displayPoints.innerText = `${state.profile.points} pts`;
+        els.userInitials.innerText = state.profile.username[0].toUpperCase();
+    } else {
+        els.btnAuthTrigger.style.display = 'block';
+        els.userDisplay.style.display = 'none';
+        els.btnLaunchToken.style.display = 'none';
     }
 }
 
+// Events
 function setupEventListeners() {
-    els.btnLogin.onclick = () => els.modalAuth.style.display = 'flex';
-    els.btnCreate.onclick = () => els.modalCreate.style.display = 'flex';
+    // Navigation
+    document.getElementById('nav-market').onclick = () => switchView('market');
+    document.getElementById('nav-portfolio').onclick = () => switchView('portfolio');
+
+    // Modals
+    els.btnAuthTrigger.onclick = () => els.modalAuth.style.display = 'flex';
+    els.btnLaunchToken.onclick = () => els.modalLaunch.style.display = 'flex';
     
-    document.querySelectorAll('.btn-close').forEach(btn => {
-        btn.onclick = (e) => {
-            e.target.closest('.modal-overlay').style.display = 'none';
-        };
+    document.querySelectorAll('.btn-close').forEach(b => {
+        b.onclick = () => b.closest('.modal-overlay').style.display = 'none';
     });
 
+    // Auth Toggle
+    els.toggleAuth.onclick = () => {
+        state.isSignUp = !state.isSignUp;
+        els.authTitle.innerText = state.isSignUp ? 'Create Account' : 'Welcome Back';
+        els.toggleAuth.innerText = state.isSignUp ? 'Already have an account? Login' : 'Need an account? Sign Up';
+    };
+
+    // Auth Submit
     els.formAuth.onsubmit = async (e) => {
         e.preventDefault();
-        const email = document.getElementById('auth-email').value;
+        const username = document.getElementById('auth-username').value;
         const password = document.getElementById('auth-password').value;
-        
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        
-        if (error) {
-            // If sign in fails, try sign up (simple demo flow)
-            const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ email, password });
-            if (signUpError) alert(signUpError.message);
-            else alert('Check your email for confirmation!');
+        const email = toInternalEmail(username);
+
+        let result;
+        if (state.isSignUp) {
+            result = await supabase.auth.signUp({ 
+                email, 
+                password,
+                options: { data: { username } }
+            });
+            // Auto-create profile via trigger or manual insert
+            if (!result.error) {
+                await supabase.from('profiles').insert([{ id: result.data.user.id, username, points: 1000 }]);
+                alert('Account created! Logging in...');
+            }
         } else {
+            result = await supabase.auth.signInWithPassword({ email, password });
+        }
+
+        if (result.error) alert(result.error.message);
+        else {
             els.modalAuth.style.display = 'none';
-            checkUser();
+            await checkUser();
         }
     };
 
-    els.formCreate.onsubmit = async (e) => {
-        e.preventDefault();
-        if (!state.user) return alert('Please sign in first');
+    // Logout
+    document.getElementById('btn-logout').onclick = async () => {
+        await supabase.auth.signOut();
+        state.user = null;
+        state.profile = null;
+        updateAuthUI();
+    };
 
-        const tokenData = {
+    // Launch Token
+    document.getElementById('form-launch').onsubmit = async (e) => {
+        e.preventDefault();
+        const token = {
             creator_id: state.user.id,
-            name: document.getElementById('token-name').value,
-            symbol: document.getElementById('token-symbol').value.toUpperCase(),
-            description: document.getElementById('token-desc').value,
-            initial_price: 10,
+            name: document.getElementById('launch-name').value,
+            symbol: document.getElementById('launch-symbol').value.toUpperCase(),
+            description: document.getElementById('launch-desc').value,
             current_price: 10
         };
-
-        const { error } = await supabase.from('currencies').insert([tokenData]);
+        const { error } = await supabase.from('currencies').insert([token]);
         if (error) alert(error.message);
         else {
-            els.modalCreate.style.display = 'none';
-            els.formCreate.reset();
+            els.modalLaunch.style.display = 'none';
+            fetchCurrencies();
         }
     };
 
-    els.marketGrid.onclick = (e) => {
-        const tradeBtn = e.target.closest('.btn-trade');
-        if (tradeBtn) {
-            const { id, name, price } = tradeBtn.dataset;
-            document.getElementById('trade-token-name').innerText = `Invest in ${name}`;
-            document.getElementById('trade-current-price').innerText = `${price} pts`;
+    // Trade Triggers
+    els.marketView.onclick = (e) => {
+        const btn = e.target.closest('.btn-trade-trigger');
+        if (btn) {
+            if (!state.user) return els.modalAuth.style.display = 'flex';
+            const { id, name, price } = btn.dataset;
             els.modalTrade.dataset.currencyId = id;
             els.modalTrade.dataset.price = price;
+            document.getElementById('trade-title').innerText = `Trade ${name}`;
+            els.tradePrice.innerText = `${price} pts`;
+            updateTradeTotal();
             els.modalTrade.style.display = 'flex';
         }
     };
 
-    document.getElementById('btn-confirm-trade').onclick = async () => {
-        if (!state.user) return alert('Please sign in first');
-        
-        const currencyId = els.modalTrade.dataset.currencyId;
-        const price = parseInt(els.modalTrade.dataset.price);
-        const amount = parseInt(document.getElementById('trade-amount').value);
-        const totalCost = price * amount;
+    els.tradeAmount.oninput = updateTradeTotal;
 
-        if (state.profile.points < totalCost) return alert('Insufficient points!');
+    document.getElementById('btn-buy').onclick = () => handleTrade('buy');
+    document.getElementById('btn-sell').onclick = () => handleTrade('sell');
+}
 
-        // Start transaction (simplified for demo)
-        // 1. Deduct points
-        const { error: pError } = await supabase
-            .from('profiles')
-            .update({ points: state.profile.points - totalCost })
-            .eq('id', state.user.id);
+function updateTradeTotal() {
+    const price = parseInt(els.modalTrade.dataset.price);
+    const amount = parseInt(els.tradeAmount.value) || 0;
+    els.tradeTotal.innerText = `${price * amount} pts`;
+}
 
-        if (pError) return alert(pError.message);
+async function handleTrade(type) {
+    const id = els.modalTrade.dataset.currencyId;
+    const price = parseInt(els.modalTrade.dataset.price);
+    const amount = parseInt(els.tradeAmount.value);
+    const total = price * amount;
 
-        // 2. Create investment record (simplified upsert logic)
-        // In a real app, this should be an RPC to ensure atomicity
-        const { error: iError } = await supabase
-            .from('transactions')
-            .insert([{
-                user_id: state.user.id,
-                currency_id: currencyId,
-                type: 'buy',
-                amount: amount,
-                price_at_time: price
-            }]);
+    if (type === 'buy' && state.profile.points < total) return alert('Insufficient points');
 
-        if (iError) alert('Logged transaction, but portfolio update requires backend triggers.');
-        
-        els.modalTrade.style.display = 'none';
-        await checkUser(); // Refresh points
-    };
+    // In a real app, use an RPC for atomic transactions
+    const newPoints = type === 'buy' ? state.profile.points - total : state.profile.points + total;
+    
+    const { error } = await supabase.from('profiles').update({ points: newPoints }).eq('id', state.user.id);
+    if (error) return alert(error.message);
+
+    await supabase.from('transactions').insert([{
+        user_id: state.user.id,
+        currency_id: id,
+        type: type,
+        amount: amount,
+        price_at_time: price
+    }]);
+
+    els.modalTrade.style.display = 'none';
+    await checkUser();
+    alert(`Successfully ${type === 'buy' ? 'bought' : 'sold'} ${amount} shares!`);
+}
+
+function switchView(view) {
+    state.currentView = view;
+    document.getElementById('view-title').innerText = view.charAt(0).toUpperCase() + view.slice(1);
+    els.marketView.style.display = view === 'market' ? 'grid' : 'none';
+    els.portfolioView.style.display = view === 'portfolio' ? 'grid' : 'none';
+    
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.toggle('active', item.id === `nav-${view}`);
+    });
+}
+
+function subscribeToUpdates() {
+    supabase.channel('any').on('postgres_changes', { event: '*', schema: 'public', table: 'currencies' }, fetchCurrencies).subscribe();
 }
 
 init();

@@ -3,124 +3,167 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nozus | The Personal Currency Exchange</title>
-    <meta name="description" content="Launch your own currency and invest in others. The future of personal equity is here.">
+    <title>Nozus | Social Exchange</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Supabase JS Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
-    <div class="container">
-        <header class="glass">
+    <div class="app-container">
+        <!-- Left Sidebar -->
+        <aside class="sidebar">
             <div class="logo">NOZUS</div>
-            <nav id="nav-actions">
-                <button id="btn-login" class="btn btn-secondary"><i data-lucide="log-in"></i> Sign In</button>
-                <div id="user-info" style="display: none;" class="flex align-center gap-1">
-                    <span id="user-points" class="btn btn-secondary"><i data-lucide="coins"></i> 0 pts</span>
-                    <button id="btn-create" class="btn btn-primary"><i data-lucide="plus-circle"></i> Launch Token</button>
+            <nav>
+                <div class="nav-item active" id="nav-market">
+                    <i data-lucide="layout-grid"></i> Market
+                </div>
+                <div class="nav-item" id="nav-portfolio">
+                    <i data-lucide="pie-chart"></i> Portfolio
+                </div>
+                <div class="nav-item" id="nav-activity">
+                    <i data-lucide="activity"></i> Activity
+                </div>
+                <div class="nav-item" id="nav-profile">
+                    <i data-lucide="user"></i> Profile
                 </div>
             </nav>
-        </header>
-
-        <main>
-            <section class="hero animate-fade-in">
-                <h1>Invest in <span>People</span></h1>
-                <p>The first decentralized stock market for individual talent and personal brands. Create your currency, build your value, and grow together.</p>
-                <div class="flex justify-center gap-1">
-                    <button class="btn btn-primary btn-lg">Explore Market</button>
-                    <button class="btn btn-secondary btn-lg">How it Works</button>
-                </div>
-            </section>
-
-            <section id="market-section">
-                <div class="flex justify-between align-center">
-                    <h2>Market Overview</h2>
-                    <div class="flex gap-1">
-                        <input type="text" id="search-market" placeholder="Search tokens..." class="glass">
+            <div style="margin-top: auto; padding-top: 1rem; border-top: 1px solid var(--border);">
+                <div id="user-display" style="display: none;">
+                    <div class="flex align-center gap-1 mb-1">
+                        <div class="token-icon" id="user-initials">U</div>
+                        <div>
+                            <div id="display-username" class="font-bold">Username</div>
+                            <div id="display-points" class="text-sm text-muted">0 pts</div>
+                        </div>
                     </div>
+                    <button id="btn-logout" class="btn btn-ghost w-full">Log Out</button>
                 </div>
-                
-                <div id="market-grid" class="market-grid">
-                    <!-- Dynamic Content -->
-                    <div class="glass-card animate-pulse" style="height: 200px;"></div>
-                    <div class="glass-card animate-pulse" style="height: 200px;"></div>
-                    <div class="glass-card animate-pulse" style="height: 200px;"></div>
+                <button id="btn-auth-trigger" class="btn btn-primary w-full">
+                    <i data-lucide="log-in"></i> Sign In
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-bar">
+                <h2 id="view-title">Market Overview</h2>
+                <div class="flex gap-1 align-center">
+                    <div class="search-bar">
+                        <i data-lucide="search" style="width: 16px; color: var(--text-dim);"></i>
+                        <input type="text" placeholder="Search tokens...">
+                    </div>
+                    <button id="btn-launch-token" class="btn btn-primary" style="display: none;">
+                        <i data-lucide="plus"></i> Launch
+                    </button>
                 </div>
-            </section>
+            </header>
+
+            <div id="market-view" class="content-grid">
+                <!-- Loading State -->
+                <div class="stock-card" style="height: 200px; opacity: 0.5;"></div>
+                <div class="stock-card" style="height: 200px; opacity: 0.5;"></div>
+                <div class="stock-card" style="height: 200px; opacity: 0.5;"></div>
+            </div>
+
+            <div id="portfolio-view" class="content-grid" style="display: none;">
+                <!-- Portfolio items -->
+            </div>
         </main>
+
+        <!-- Right Panel -->
+        <aside class="right-panel">
+            <h3 class="mb-2">Trending</h3>
+            <div id="trending-list">
+                <div class="trending-item">
+                    <div class="flex align-center gap-1">
+                        <span class="text-dim">1</span>
+                        <span class="font-bold">ALEX</span>
+                    </div>
+                    <span class="text-accent">+12.4%</span>
+                </div>
+                <!-- More items -->
+            </div>
+            
+            <h3 class="mt-2 mb-2">Recent Activity</h3>
+            <div id="activity-feed" class="text-sm text-muted">
+                <p>No recent trades.</p>
+            </div>
+        </aside>
     </div>
 
     <!-- Modals -->
     <div id="modal-auth" class="modal-overlay">
-        <div class="modal glass-card">
-            <h2 id="auth-title">Sign In to Nozus</h2>
-            <p class="text-muted mb-2">Connect with your community and start investing.</p>
+        <div class="modal">
+            <h2 id="auth-title" class="mb-1">Welcome Back</h2>
+            <p class="text-muted mb-2">Login or create an account with your username.</p>
             <form id="form-auth">
                 <div class="input-group">
-                    <label>Email Address</label>
-                    <input type="email" id="auth-email" required placeholder="name@example.com">
+                    <label>Username</label>
+                    <input type="text" id="auth-username" required placeholder="Enter username">
                 </div>
                 <div class="input-group">
                     <label>Password</label>
-                    <input type="password" id="auth-password" required>
+                    <input type="password" id="auth-password" required placeholder="••••••••">
                 </div>
-                <button type="submit" class="btn btn-primary w-full">Continue</button>
-                <p class="text-center mt-1 text-sm">
-                    <a href="#" id="toggle-auth" class="text-primary">Don't have an account? Sign Up</a>
-                </p>
+                <button type="submit" class="btn btn-primary w-full justify-center">Continue</button>
+                <div class="text-center mt-1">
+                    <button type="button" id="toggle-auth" class="btn btn-ghost text-sm w-full justify-center">
+                        Need an account? Sign Up
+                    </button>
+                </div>
             </form>
         </div>
     </div>
 
-    <div id="modal-create" class="modal-overlay">
-        <div class="modal glass-card">
-            <h2>Launch Your Token</h2>
-            <p class="text-muted mb-2">Define your currency and set your initial supply.</p>
-            <form id="form-create">
+    <!-- Launch Modal -->
+    <div id="modal-launch" class="modal-overlay">
+        <div class="modal">
+            <h2 class="mb-1">Launch Token</h2>
+            <form id="form-launch">
                 <div class="input-group">
-                    <label>Token Name</label>
-                    <input type="text" id="token-name" required placeholder="e.g. Alex Coin">
+                    <label>Name</label>
+                    <input type="text" id="launch-name" required placeholder="e.g. Creator Coin">
                 </div>
                 <div class="input-group">
-                    <label>Symbol (3-4 chars)</label>
-                    <input type="text" id="token-symbol" required placeholder="ALEX">
+                    <label>Symbol</label>
+                    <input type="text" id="launch-symbol" required placeholder="TKN">
                 </div>
                 <div class="input-group">
                     <label>Description</label>
-                    <textarea id="token-desc" rows="3" placeholder="What does this token represent?"></textarea>
+                    <input type="text" id="launch-desc" placeholder="Briefly describe your token">
                 </div>
-                <button type="submit" class="btn btn-primary w-full">Create Token</button>
-                <button type="button" class="btn btn-secondary w-full mt-1 btn-close">Cancel</button>
+                <button type="submit" class="btn btn-primary w-full justify-center">Launch</button>
+                <button type="button" class="btn btn-ghost w-full justify-center mt-1 btn-close">Cancel</button>
             </form>
         </div>
     </div>
 
+    <!-- Trade Modal -->
     <div id="modal-trade" class="modal-overlay">
-        <div class="modal glass-card">
-            <h2 id="trade-token-name">Buy Token</h2>
-            <div class="flex justify-between mb-2">
-                <span class="text-muted">Current Price</span>
-                <span id="trade-current-price" class="font-bold">10 pts</span>
+        <div class="modal">
+            <h2 id="trade-title" class="mb-1">Trade Token</h2>
+            <div class="flex justify-between mb-2 p-1" style="background: var(--bg-hover); border-radius: var(--radius-md);">
+                <span class="text-muted">Price</span>
+                <span id="trade-price" class="font-bold">0 pts</span>
             </div>
             <div class="input-group">
-                <label>Amount to Buy</label>
-                <input type="number" id="trade-amount" min="1" value="1">
+                <label>Amount</label>
+                <input type="number" id="trade-amount" value="1" min="1">
             </div>
             <div class="flex justify-between mb-2">
-                <span class="text-muted">Total Cost</span>
-                <span id="trade-total-cost" class="font-bold">10 pts</span>
+                <span class="text-muted">Total</span>
+                <span id="trade-total" class="font-bold">0 pts</span>
             </div>
-            <button id="btn-confirm-trade" class="btn btn-primary w-full">Confirm Investment</button>
-            <button type="button" class="btn btn-secondary w-full mt-1 btn-close">Cancel</button>
+            <div class="flex gap-1">
+                <button id="btn-buy" class="btn btn-primary flex-1 justify-center">Buy</button>
+                <button id="btn-sell" class="btn btn-ghost flex-1 justify-center" style="border: 1px solid var(--border);">Sell</button>
+            </div>
+            <button type="button" class="btn btn-ghost w-full justify-center mt-1 btn-close">Cancel</button>
         </div>
     </div>
 
     <script type="module" src="app.js"></script>
-    <script>
-        // Initialize Lucide icons
-        lucide.createIcons();
-    </script>
+    <script>lucide.createIcons();</script>
 </body>
 </html>
