@@ -380,12 +380,8 @@ async function renderChart() {
 function convertToOHLC(data) {
     if (data.length === 0) return [];
     
-    // For this simple version, we'll treat each trade as its own candle
-    // but with a tiny bit of variation to make it look like a real candle
-    // if there are multiple trades at the same timestamp.
-    // Real OHLC requires grouping by time (e.g. 1 min candles)
-    
-    const interval = 60; // 1 minute candles
+    // Using a 5-second interval for testing so users see movement quickly
+    const interval = 5; 
     const candles = [];
     let currentCandle = null;
 
@@ -467,7 +463,7 @@ async function executeDelete() {
         await refreshData();
     } catch (err) {
         notify("Delete failed: " + err.message, 'error');
-        console.error("Deletion error:", err);
+        console.error("Deletion error details:", err);
         $('modal-confirm-delete').style.display = 'none';
     }
 }
@@ -541,11 +537,15 @@ async function executeTrade() {
                 user_id: state.user.id, currency_id: c.id, type: 'buy', amount: shares, price_at_time: avgPrice
             }]);
             const current = state.holdings[c.id] || 0;
-            if (current > 0) {
-                await supabase.from('holdings').update({ shares: current + shares }).eq('user_id', state.user.id).eq('currency_id', c.id);
-            } else {
-                await supabase.from('holdings').insert([{ user_id: state.user.id, currency_id: c.id, shares: shares }]);
-            }
+            const { error: hError } = await supabase.from('holdings')
+                .upsert([{ 
+                    user_id: state.user.id, 
+                    currency_id: c.id, 
+                    shares: current + shares 
+                }], { onConflict: 'user_id,currency_id' });
+            
+            if (hError) throw hError;
+
             // Bump price (demand) - new price is what you bought at
             const newPrice = Math.round((c.current_price * (1 + shares * 0.001)) * 100) / 100;
             await supabase.from('currencies').update({ current_price: newPrice }).eq('id', c.id);
@@ -554,7 +554,10 @@ async function executeTrade() {
 
             notify(`Bought ${shares} shares of ${c.symbol}!`, 'success');
             await postTradeRefresh(c.id);
-        } catch (err) { notify(err.message, 'error'); }
+        } catch (err) { 
+            console.error("Buy error:", err);
+            notify("Trade failed: " + (err.message || "Unknown error"), 'error'); 
+        }
     } else {
         const owned = state.holdings[c.id] || 0;
         if (owned < shares) return notify(`You only own ${owned} shares`, 'error');
@@ -568,7 +571,13 @@ async function executeTrade() {
             await supabase.from('transactions').insert([{
                 user_id: state.user.id, currency_id: c.id, type: 'sell', amount: shares, price_at_time: avgPrice
             }]);
-            await supabase.from('holdings').update({ shares: owned - shares }).eq('user_id', state.user.id).eq('currency_id', c.id);
+            const { error: hError } = await supabase.from('holdings')
+                .update({ shares: owned - shares })
+                .eq('user_id', state.user.id)
+                .eq('currency_id', c.id);
+            
+            if (hError) throw hError;
+
             const newPrice = Math.max(0.01, Math.round((c.current_price * (1 - shares * 0.001)) * 100) / 100);
             await supabase.from('currencies').update({ current_price: newPrice }).eq('id', c.id);
             await recordPrice(c.id, newPrice);
@@ -582,15 +591,20 @@ async function executeTrade() {
 async function postTradeRefresh(currencyId) {
     await fetchProfile(state.user.id);
     await fetchHoldings();
+    
+    // Explicitly update current currency in state before refreshData
+    const { data: updatedCurr } = await supabase.from('currencies').select('*').eq('id', currencyId).single();
+    if (updatedCurr) {
+        const idx = state.currencies.findIndex(x => x.id === currencyId);
+        if (idx !== -1) state.currencies[idx] = updatedCurr;
+        if (state.selectedCurrency?.id === currencyId) state.selectedCurrency = updatedCurr;
+    }
+
     await refreshData();
     updateUserUI();
     if (state.view === 'detail' && state.selectedCurrency) {
         renderHistoryTable();
-        const updated = state.currencies.find(x => x.id === currencyId);
-        if (updated) {
-            state.selectedCurrency = updated;
-            openDetail(currencyId);
-        }
+        openDetail(currencyId);
     }
 }
 
