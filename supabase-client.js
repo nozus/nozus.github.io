@@ -1,4 +1,4 @@
-import CONFIG from './config.js';
+import CONFIG from './config.js?v=2';
 
 // Note: Ensure you have the Supabase JS client loaded in your HTML
 // <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

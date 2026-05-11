@@ -196,7 +196,7 @@
     </div>
 
     <script type="module">
-        import CONFIG from './config.js';
+        import CONFIG from './config.js?v=2';
         
         const { createClient } = window.supabase;
         const supabase = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
@@ -246,7 +246,8 @@
                     help += "1. Go to your Supabase Dashboard.<br>";
                     help += "2. Click <b>Project Settings</b> (cog icon).<br>";
                     help += "3. Click <b>API</b>.<br>";
-                    help += "4. Look for <b>'anon' (public)</b> key and copy that long string.";
+                    help += "4. Look for <b>'anon' (public)</b> key and copy that long string.<br><br>";
+                    help += "<b>Already updated?</b> Your browser might be caching the old key. Please press <b>Ctrl + F5</b> (or Cmd + Shift + R on Mac) to force a refresh.";
                     
                     throw new Error(help);
                 }
