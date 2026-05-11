@@ -169,7 +169,9 @@ async function fetchPriceHistory(currencyId, range = '1d') {
 let lastRecordTime = 0;
 async function recordPrice(currencyId, price) {
     let now = Math.floor(Date.now() / 1000);
-    // Ensure unique timestamp for LightweightCharts
+let lastRecordTime = 0;
+async function recordPrice(currencyId, price) {
+    let now = Math.floor(Date.now() / 1000);
     if (now <= lastRecordTime) {
         now = lastRecordTime + 1;
     }
@@ -180,6 +182,20 @@ async function recordPrice(currencyId, price) {
         price: price,
         recorded_at: new Date(now * 1000).toISOString()
     }]);
+}
+
+async function getStats(currencyId) {
+    const { data } = await supabase.from('price_history').select('price').eq('currency_id', currencyId);
+    if (!data || data.length === 0) return { high: 10, low: 10, cap: 0 };
+    const prices = data.map(d => d.price);
+    const high = Math.max(...prices);
+    const low = Math.min(...prices);
+    
+    const { data: hData } = await supabase.from('holdings').select('shares').eq('currency_id', currencyId);
+    const totalShares = (hData || []).reduce((sum, h) => sum + h.shares, 0);
+    const cap = state.selectedCurrency ? state.selectedCurrency.current_price * totalShares : 0;
+    
+    return { high, low, cap };
 }
 
 // ============================
@@ -233,7 +249,7 @@ function renderLeaderboard() {
 // ============================
 // DETAIL VIEW
 // ============================
-function openDetail(currencyId) {
+async function openDetail(currencyId) {
     const c = state.currencies.find(x => x.id === currencyId);
     if (!c) return;
     state.selectedCurrency = c;
@@ -241,34 +257,32 @@ function openDetail(currencyId) {
     $('detail-symbol').innerText = c.symbol;
     $('detail-name').innerText = c.name;
     
-    // Real market feel: Show Bid/Ask spread
-    const bid = (c.current_price * 0.999).toFixed(2);
-    const ask = (c.current_price * 1001 / 1000).toFixed(2);
+    // Stats — real data only
     $('detail-price').innerText = c.current_price.toFixed(2);
-    $('trade-pps').innerText = ask + ' pts'; // Buy at Ask
 
     const { change, pct } = getRealChange(c);
     const pos = change >= 0;
     const el = $('detail-change');
-    el.innerText = `${pos ? '+' : ''}${change.toFixed(2)} (${pos ? '+' : ''}${pct.toFixed(2)}%)`;
-    el.className = 'price-change ' + (pos ? 'text-positive' : 'text-negative');
+    if (el) {
+        el.innerText = `${pos ? '+' : ''}${change.toFixed(2)} (${pos ? '+' : ''}${pct.toFixed(2)}%)`;
+        el.className = 'price-change ' + (pos ? 'text-positive' : 'text-negative');
+    }
 
-    // Stats — real data only
-    const ipoEl = $('stat-ipo');
-    const priceEl = $('stat-price');
-    const returnEl = $('stat-return');
-    const holdingsEl = $('stat-holdings');
-    if (ipoEl) ipoEl.innerText = '10.00';
-    if (priceEl) priceEl.innerText = c.current_price.toFixed(2);
-    if (returnEl) {
-        returnEl.innerText = (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%';
-        returnEl.style.color = pct >= 0 ? 'var(--accent)' : 'var(--danger)';
-    }
-    if (holdingsEl) {
-        const shares = state.holdings[c.id] || 0;
-        const val = (shares * c.current_price).toFixed(2);
-        holdingsEl.innerText = `${shares} shares (${val} pts)`;
-    }
+    const { high, low, cap } = await getStats(c.id);
+    $('stat-ipo').innerText = '10.00';
+    $('stat-price').innerText = c.current_price.toFixed(2);
+    $('stat-high').innerText = high.toFixed(2);
+    $('stat-low').innerText = low.toFixed(2);
+    $('stat-cap').innerText = cap.toLocaleString(undefined, { maximumFractionDigits: 0 });
+    
+    const { pct } = getRealChange(c, state.chartRange);
+    $('stat-return').innerText = (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%';
+    $('stat-return').className = 'stat-value ' + (pct >= 0 ? 'text-positive' : 'text-negative');
+    
+    $('stat-holdings').innerText = (state.holdings[c.id] || 0) + ' shares';
+    
+    renderHistoryTable();
+    renderChart();
 
     // Trade panel
     const tradeHoldings = $('trade-holdings');
@@ -396,13 +410,23 @@ async function renderChart() {
             series.setData([{ time: now, value: val }]);
         }
     } else {
-        // Ensure the chart has a starting point at the beginning of the data set
-        // to prevent it looking like a single floating dot
+        // Ensure the chart spans a full 24-hour window
+        const now = Math.floor(Date.now() / 1000);
+        const twentyFourHours = 24 * 3600;
+        const start = now - twentyFourHours;
+        
         if (data.length === 1) {
-            const first = data[0];
-            data.unshift({ time: first.time - 3600, value: first.value });
+            data.unshift({ time: start, value: data[0].value });
+        } else if (data.length > 1 && data[0].time > start) {
+            data.unshift({ time: start, value: data[0].value });
         }
         series.setData(data);
+        
+        // Force the timescale to show the window
+        chart.timeScale().setVisibleRange({
+            from: start,
+            to: now,
+        });
     }
 
     chart.timeScale().fitContent();
@@ -569,7 +593,7 @@ async function executeTrade() {
             const currentPoints = parseFloat(state.profile.points);
             if (currentPoints < totalCost) return notify("Insufficient points", 'error');
 
-            const { error: pError } = await supabase.from('profiles').update({ points: currentPoints - totalCost }).eq('id', state.user.id);
+            const { error: pError } = await supabase.from('profiles').update({ points: Math.floor(currentPoints - totalCost) }).eq('id', state.user.id);
             if (pError) throw pError;
             await supabase.from('transactions').insert([{
                 user_id: state.user.id, currency_id: c.id, type: 'buy', amount: shares, price_at_time: avgPrice
@@ -606,7 +630,7 @@ async function executeTrade() {
             const totalCredit = shares * avgPrice;
 
             const currentPoints = parseFloat(state.profile.points);
-            const { error: pError } = await supabase.from('profiles').update({ points: currentPoints + totalCredit }).eq('id', state.user.id);
+            const { error: pError } = await supabase.from('profiles').update({ points: Math.floor(currentPoints + totalCredit) }).eq('id', state.user.id);
             if (pError) throw pError;
             await supabase.from('transactions').insert([{
                 user_id: state.user.id, currency_id: c.id, type: 'sell', amount: shares, price_at_time: avgPrice
