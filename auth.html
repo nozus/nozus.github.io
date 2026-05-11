@@ -3,129 +3,273 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nozus | Access the Exchange</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Nozus | Enter the Exchange</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --secondary: #a855f7;
+            --bg-gradient: mesh-gradient(at 0% 0%, #4f46e5 0%, #ec4899 100%);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #0f172a;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(236, 72, 153, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(20, 184, 166, 0.15) 0px, transparent 50%),
+                radial-gradient(at 0% 100%, rgba(168, 85, 247, 0.15) 0px, transparent 50%);
+            color: white;
+            overflow: hidden;
+        }
+
+        .auth-container {
+            width: 100%;
+            max-width: 440px;
+            padding: 2rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Glassmorphism Card */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 3rem 2.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.5) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -2px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.9rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1rem;
+            color: white;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        input:focus {
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 1rem;
+            background: white;
+            color: #0f172a;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 1rem;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            background: #f8fafc;
+        }
+
+        .toggle-text {
+            text-align: center;
+            margin-top: 2rem;
+            font-size: 0.875rem;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .toggle-link {
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .error-box {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 12px;
+            color: #fca5a5;
+            font-size: 0.8rem;
+            display: none;
+            line-height: 1.4;
+        }
+
+        /* Decorative blobs */
+        .blob {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: var(--primary);
+            filter: blur(100px);
+            border-radius: 50%;
+            z-index: 1;
+            opacity: 0.3;
+        }
+    </style>
 </head>
-<body class="auth-page">
-    <div class="auth-grid">
-        <!-- Visual Panel -->
-        <div class="auth-visual">
-            <div class="logo-large">nozus</div>
-            <p>Trade the future. Invest in people.</p>
-        </div>
+<body>
+    <div class="blob" style="top: -100px; left: -100px;"></div>
+    <div class="blob" style="bottom: -100px; right: -100px; background: var(--secondary);"></div>
 
-        <!-- Form Panel -->
-        <div class="auth-form-container">
-            <div class="auth-card">
-                <div class="auth-tabs">
-                    <button id="tab-login" class="tab-btn active">Log In</button>
-                    <button id="tab-signup" class="tab-btn">Create Account</button>
+    <div class="auth-container">
+        <div class="glass-card">
+            <div class="logo">nozus</div>
+            <p class="subtitle" id="auth-subtitle">The future of personal equity.</p>
+
+            <form id="auth-form">
+                <div class="input-group">
+                    <label>Username</label>
+                    <input type="text" id="username" placeholder="AlexInvestor" required>
                 </div>
+                <div class="input-group">
+                    <label>Password</label>
+                    <input type="password" id="password" placeholder="••••••••" required>
+                </div>
+                <button type="submit" id="submit-btn" class="btn-submit">Start Trading</button>
+            </form>
 
-                <form id="form-auth">
-                    <div class="input-field">
-                        <label>Username</label>
-                        <input type="text" id="auth-username" required placeholder="Your unique handle">
-                    </div>
-                    <div class="input-field">
-                        <label>Password</label>
-                        <input type="password" id="auth-password" required placeholder="••••••••">
-                    </div>
-                    <button type="submit" id="submit-btn" class="btn btn-primary w-full">Log In to Exchange</button>
-                </form>
-                
-                <div id="auth-error" class="error-msg" style="display: none;"></div>
-            </div>
+            <div class="error-box" id="error-display"></div>
+
+            <p class="toggle-text">
+                <span id="toggle-desc">Don't have an account?</span> 
+                <span class="toggle-link" id="toggle-auth">Create one</span>
+            </p>
         </div>
     </div>
 
     <script type="module">
-        import { supabase } from './supabase-client.js';
+        import CONFIG from './config.js';
+        
+        const { createClient } = window.supabase;
+        const supabase = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
 
         let isSignUp = false;
         const els = {
-            form: document.getElementById('form-auth'),
-            tabLogin: document.getElementById('tab-login'),
-            tabSignup: document.getElementById('tab-signup'),
+            form: document.getElementById('auth-form'),
             submitBtn: document.getElementById('submit-btn'),
-            errorMsg: document.getElementById('auth-error'),
-            username: document.getElementById('auth-username'),
-            password: document.getElementById('auth-password')
+            toggleLink: document.getElementById('toggle-auth'),
+            toggleDesc: document.getElementById('toggle-desc'),
+            errorDisplay: document.getElementById('error-display'),
+            username: document.getElementById('username'),
+            password: document.getElementById('password')
         };
 
-        const updateUI = () => {
-            els.tabLogin.classList.toggle('active', !isSignUp);
-            els.tabSignup.classList.toggle('active', isSignUp);
-            els.submitBtn.innerText = isSignUp ? 'Create Account' : 'Log In to Exchange';
-            els.errorMsg.style.display = 'none';
+        els.toggleLink.onclick = () => {
+            isSignUp = !isSignUp;
+            els.submitBtn.innerText = isSignUp ? 'Create Account' : 'Start Trading';
+            els.toggleDesc.innerText = isSignUp ? 'Already have an account?' : "Don't have an account?";
+            els.toggleLink.innerText = isSignUp ? 'Log in' : 'Create one';
+            els.errorDisplay.style.display = 'none';
         };
-
-        els.tabLogin.onclick = () => { isSignUp = false; updateUI(); };
-        els.tabSignup.onclick = () => { isSignUp = true; updateUI(); };
-
-        const toInternalEmail = (username) => `${username.toLowerCase().trim()}@nozus.internal`;
 
         els.form.onsubmit = async (e) => {
             e.preventDefault();
             els.submitBtn.disabled = true;
-            els.errorMsg.style.display = 'none';
-            
-            const username = els.username.value.trim();
-            const password = els.password.value;
-            const email = toInternalEmail(username);
+            els.errorDisplay.style.display = 'none';
+
+            const user = els.username.value.trim();
+            const pass = els.password.value;
+            const email = `${user.toLowerCase()}@nozus.internal`;
 
             try {
+                // Key Validation for Supabase
+                const key = CONFIG.SUPABASE_ANON_KEY || "";
+                if (!key.startsWith('eyJ')) {
+                    let help = "<b>KEY FORMAT ERROR:</b> The key you provided starts with <code>sb_</code>. <br><br>";
+                    help += "Supabase requires the <b>'anon' public key</b> for the website to work. It is a very long string that starts with <code>eyJ...</code>.<br><br>";
+                    help += "<b>Where to find it:</b><br>";
+                    help += "1. Go to your Supabase Dashboard.<br>";
+                    help += "2. Click <b>Project Settings</b> (cog icon).<br>";
+                    help += "3. Click <b>API</b>.<br>";
+                    help += "4. Look for <b>'anon' (public)</b> key and copy that long string.";
+                    
+                    throw new Error(help);
+                }
+
                 let res;
                 if (isSignUp) {
-                    console.log("Attempting Sign Up with:", email);
+                    console.log("Attempting Sign Up...");
                     res = await supabase.auth.signUp({ 
                         email, 
-                        password, 
-                        options: { data: { username } } 
+                        password: pass, 
+                        options: { data: { username: user } } 
                     });
-                    
                     if (res.error) throw res.error;
                     
-                    // Profile creation is secondary.
                     try {
-                        await supabase
-                            .from('profiles')
-                            .insert([{ id: res.data.user.id, username, points: 1000 }]);
-                    } catch (pErr) {
-                        console.warn("Profile auto-insert failed:", pErr);
-                    }
+                        await supabase.from('profiles').insert([{ id: res.data.user.id, username: user, points: 1000 }]);
+                    } catch (pE) { console.warn("Profile init failed:", pE); }
                     
-                    alert('Account created! Logging in...');
+                    alert("Account Created!");
                 } else {
-                    console.log("Attempting Sign In with:", email);
-                    res = await supabase.auth.signInWithPassword({ email, password });
+                    console.log("Attempting Sign In...");
+                    res = await supabase.auth.signInWithPassword({ email, password: pass });
                     if (res.error) throw res.error;
                 }
 
-                // Redirect to home
                 window.location.href = 'index.html';
             } catch (err) {
-                console.error("CRITICAL AUTH ERROR:", err);
-                let message = err.message || "Unknown connection error.";
-                
-                if (message.toLowerCase().includes("fetch")) {
-                    message = "Connection Failed: Please verify your Supabase URL and Key in config.js. Check the browser console for details.";
-                }
-                
-                els.errorMsg.innerText = message;
-                els.errorMsg.style.display = 'block';
+                console.error("AUTH ERROR:", err);
+                els.errorDisplay.innerHTML = err.message || "Unknown connection error.";
+                els.errorDisplay.style.display = 'block';
             } finally {
                 els.submitBtn.disabled = false;
             }
         };
-
-        // Check if already logged in
-        const checkSession = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) window.location.href = 'index.html';
-        };
-        checkSession();
     </script>
 </body>
 </html>
