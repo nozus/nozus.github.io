@@ -4,77 +4,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>nozus. | Enter the Exchange</title>
+    <title>nozus. | login</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap"
-        rel="stylesheet">
-    <!-- Supabase JS -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
-            --primary: #6366f1;
-            --secondary: #a855f7;
-            --bg-gradient: mesh-gradient(at 0% 0%, #4f46e5 0%, #ec4899 100%);
+            --primary: #000000;
+            --bg-page: #f8e300;
+            --text-main: #000000;
+            --border: #000000;
         }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            text-transform: lowercase;
         }
 
         body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-family: 'Inter', Helvetica, sans-serif;
+            font-weight: 700;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: #0f172a;
-            background-image:
-                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
-                radial-gradient(at 100% 0%, rgba(236, 72, 153, 0.15) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(20, 184, 166, 0.15) 0px, transparent 50%),
-                radial-gradient(at 0% 100%, rgba(168, 85, 247, 0.15) 0px, transparent 50%);
-            color: white;
-            overflow: hidden;
+            background: var(--bg-page);
+            color: var(--text-main);
         }
 
         .auth-container {
             width: 100%;
-            max-width: 440px;
+            max-width: 400px;
             padding: 2rem;
-            position: relative;
-            z-index: 10;
         }
 
-        /* Glassmorphism Card */
-        .glass-card {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 24px;
-            padding: 3rem 2.5rem;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        .card {
+            border: 4px solid var(--border);
+            padding: 3rem 2rem;
+            background: var(--bg-page);
         }
 
         .logo {
-            font-size: 2.5rem;
-            font-weight: 800;
+            font-size: 3rem;
+            font-weight: 900;
             text-align: center;
             margin-bottom: 0.5rem;
-            background: linear-gradient(135deg, #fff 0%, rgba(255, 255, 255, 0.5) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
             letter-spacing: -2px;
         }
 
         .subtitle {
             text-align: center;
-            color: rgba(255, 255, 255, 0.5);
             font-size: 0.9rem;
             margin-bottom: 2.5rem;
+            opacity: 0.7;
         }
 
         .input-group {
@@ -83,62 +67,52 @@
 
         .input-group label {
             display: block;
-            font-size: 0.75rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            font-weight: 900;
             margin-bottom: 0.5rem;
-            color: rgba(255, 255, 255, 0.6);
         }
 
         input {
             width: 100%;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
+            background: var(--bg-page);
+            border: 2px solid var(--border);
             padding: 1rem;
-            color: white;
+            color: var(--text-main);
             font-size: 1rem;
+            font-family: inherit;
+            font-weight: 700;
             outline: none;
-            transition: all 0.3s;
         }
 
         input:focus {
-            border-color: var(--primary);
-            background: rgba(255, 255, 255, 0.08);
-            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
+            background: #fff;
         }
 
         .btn-submit {
             width: 100%;
             padding: 1rem;
-            background: white;
-            color: #0f172a;
+            background: var(--border);
+            color: var(--bg-page);
             border: none;
-            border-radius: 12px;
-            font-weight: 700;
-            font-size: 1rem;
+            font-weight: 900;
+            font-size: 1.25rem;
             cursor: pointer;
-            transition: all 0.3s;
             margin-top: 1rem;
         }
 
         .btn-submit:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-            background: #f8fafc;
+            background: #fff;
+            color: var(--border);
+            border: 2px solid var(--border);
         }
 
         .toggle-text {
             text-align: center;
             margin-top: 2rem;
             font-size: 0.875rem;
-            color: rgba(255, 255, 255, 0.4);
         }
 
         .toggle-link {
-            color: white;
-            font-weight: 700;
+            font-weight: 900;
             cursor: pointer;
             text-decoration: underline;
         }
@@ -146,59 +120,42 @@
         .error-box {
             margin-top: 1.5rem;
             padding: 1rem;
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.2);
-            border-radius: 12px;
-            color: #fca5a5;
+            border: 2px solid #000;
+            color: red;
             font-size: 0.8rem;
             display: none;
             line-height: 1.4;
-        }
-
-        /* Decorative blobs */
-        .blob {
-            position: absolute;
-            width: 300px;
-            height: 300px;
-            background: var(--primary);
-            filter: blur(100px);
-            border-radius: 50%;
-            z-index: 1;
-            opacity: 0.3;
         }
     </style>
 </head>
 
 <body>
-    <div class="blob" style="top: -100px; left: -100px;"></div>
-    <div class="blob" style="bottom: -100px; right: -100px; background: var(--secondary);"></div>
-
     <div class="auth-container">
-        <div class="glass-card">
+        <div class="card">
             <div class="logo">nozus.</div>
-            <p class="subtitle" id="auth-subtitle">The future of personal equity.</p>
+            <p class="subtitle" id="auth-subtitle">simplistic exchange.</p>
 
             <form id="auth-form">
                 <div class="input-group">
-                    <label>Username</label>
-                    <input type="text" id="username" placeholder="" required>
+                    <label>username</label>
+                    <input type="text" id="username" required>
                 </div>
                 <div class="input-group">
-                    <label>Password</label>
+                    <label>password</label>
                     <div style="position: relative;">
-                        <input type="password" id="password" placeholder="••••••••" required>
+                        <input type="password" id="password" required>
                         <span id="toggle-password-visibility"
-                            style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); cursor: pointer; color: rgba(255,255,255,0.4); font-size: 0.7rem; font-weight: 700; user-select: none;">SHOW</span>
+                            style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 0.7rem; font-weight: 900;">show</span>
                     </div>
                 </div>
-                <button type="submit" id="submit-btn" class="btn-submit">Start Trading</button>
+                <button type="submit" id="submit-btn" class="btn-submit">login</button>
             </form>
 
             <div class="error-box" id="error-display"></div>
 
             <p class="toggle-text">
-                <span id="toggle-desc">Don't have an account?</span>
-                <span class="toggle-link" id="toggle-auth">Create one</span>
+                <span id="toggle-desc">no account?</span>
+                <span class="toggle-link" id="toggle-auth">create one</span>
             </p>
         </div>
     </div>
@@ -224,14 +181,14 @@
         els.togglePass.onclick = () => {
             const isPass = els.password.type === 'password';
             els.password.type = isPass ? 'text' : 'password';
-            els.togglePass.innerText = isPass ? 'HIDE' : 'SHOW';
+            els.togglePass.innerText = isPass ? 'hide' : 'show';
         };
 
         els.toggleLink.onclick = () => {
             isSignUp = !isSignUp;
-            els.submitBtn.innerText = isSignUp ? 'Create Account' : 'Start Trading';
-            els.toggleDesc.innerText = isSignUp ? 'Already have an account?' : "Don't have an account?";
-            els.toggleLink.innerText = isSignUp ? 'Log in' : 'Create one';
+            els.submitBtn.innerText = isSignUp ? 'create account' : 'login';
+            els.toggleDesc.innerText = isSignUp ? 'already have an account?' : "no account?";
+            els.toggleLink.innerText = isSignUp ? 'login' : 'create one';
             els.errorDisplay.style.display = 'none';
         };
 
@@ -242,28 +199,11 @@
 
             const user = els.username.value.trim();
             const pass = els.password.value;
-            // Use a more standard-looking fake domain to bypass strict validation
             const email = `${user.toLowerCase()}@nozus-exchange.com`;
 
             try {
-                // Key Validation for Supabase
-                const key = CONFIG.SUPABASE_ANON_KEY || "";
-                if (!key.startsWith('eyJ')) {
-                    let help = "<b>KEY FORMAT ERROR:</b> The key you provided starts with <code>sb_</code>. <br><br>";
-                    help += "Supabase requires the <b>'anon' public key</b> for the website to work. It is a very long string that starts with <code>eyJ...</code>.<br><br>";
-                    help += "<b>Where to find it:</b><br>";
-                    help += "1. Go to your Supabase Dashboard.<br>";
-                    help += "2. Click <b>Project Settings</b> (cog icon).<br>";
-                    help += "3. Click <b>API</b>.<br>";
-                    help += "4. Look for <b>'anon' (public)</b> key and copy that long string.<br><br>";
-                    help += "<b>Already updated?</b> Your browser might be caching the old key. Please press <b>Ctrl + F5</b> (or Cmd + Shift + R on Mac) to force a refresh.";
-
-                    throw new Error(help);
-                }
-
                 let res;
                 if (isSignUp) {
-                    console.log("Attempting Sign Up...");
                     res = await supabase.auth.signUp({
                         email,
                         password: pass,
@@ -277,7 +217,6 @@
 
                     alert("Account Created!");
                 } else {
-                    console.log("Attempting Sign In...");
                     res = await supabase.auth.signInWithPassword({ email, password: pass });
                     if (res.error) throw res.error;
                 }
@@ -285,18 +224,7 @@
                 window.location.href = 'index.html';
             } catch (err) {
                 console.error("AUTH ERROR:", err);
-                let message = err.message || "Unknown connection error.";
-
-                if (message.includes("confirmation")) {
-                    message = "<b>SIGNUP FAILED:</b> Email confirmation is enabled in your Supabase settings.<br><br>";
-                    message += "To fix this, go to your <b>Supabase Dashboard</b> > <b>Authentication</b> > <b>Settings</b> and <b>uncheck</b> 'Confirm email'.";
-                } else if (message.includes("rate limit")) {
-                    message = "<b>RATE LIMIT EXCEEDED:</b> You are creating accounts too fast.<br><br>";
-                    message += "1. Wait 60 seconds and try again.<br>";
-                    message += "2. To fix this permanently: Go to your <b>Supabase Dashboard</b> > <b>Authentication</b> > <b>Settings</b> and increase the 'Rate Limits' (e.g., set 'Max Signups per hour' to 100).";
-                }
-
-                els.errorDisplay.innerHTML = message;
+                els.errorDisplay.innerHTML = err.message || "Unknown error.";
                 els.errorDisplay.style.display = 'block';
             } finally {
                 els.submitBtn.disabled = false;

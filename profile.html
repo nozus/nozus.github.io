@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>nozus. | My Profile</title>
+    <title>nozus. | my profile</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="stylesheet" href="style.css">
     <script src="theme.js"></script>
@@ -13,8 +13,8 @@
 <body>
     <div class="app-wrapper">
         <header>
-            <div class="logo" style="margin-right: auto;">nozus.</div>
-            <div class="user-pill" id="user-display">
+            <div class="logo">nozus.</div>
+            <div class="user-pill" id="user-display" style="border: 2px solid #000; padding: 0.5rem 1rem;">
                 <div class="flex align-center gap-1">
                     <div id="nav-icon-slot"></div>
                     <span id="nav-username" class="font-bold">Username</span>
@@ -36,9 +36,8 @@
                 <a href="settings.html" class="nav-link">
                     <i data-lucide="settings"></i> <span>Settings</span>
                 </a>
-                <hr style="margin: 1rem 0; border: none; border-top: 1px solid var(--border);">
-                <button id="btn-logout" class="btn btn-ghost w-full" style="justify-content: flex-start; padding: 1rem;">
-                    <i data-lucide="log-out"></i> <span>Sign Out</span>
+                <button id="btn-logout" class="btn btn-ghost w-full" style="justify-content: flex-start; padding: 1rem; border-top: 2px solid #000; border-radius: 0;">
+                    <i data-lucide="log-out"></i> <span>sign out</span>
                 </button>
             </nav>
         </aside>
@@ -47,15 +46,15 @@
             <!-- Profile Header -->
             <div class="profile-hero">
                 <div id="profile-icon-display"></div>
-                <h1 id="profile-username" class="profile-name">Username</h1>
+                <h1 id="profile-username" class="profile-name">username</h1>
                 <p id="profile-points" class="text-muted font-bold">1,000 pts</p>
             </div>
 
             <div class="grid" style="grid-template-columns: 1fr 300px; gap: 2rem;">
                 <!-- Icon Collection -->
                 <div class="card">
-                    <h3 class="mb-1">Icon Collection</h3>
-                    <p class="text-muted text-xs mb-2">Tap an unlocked icon to equip it.</p>
+                    <h3 class="mb-1">icon collection</h3>
+                    <p class="text-muted text-xs mb-2">tap an unlocked icon to equip it.</p>
                     
                     <div id="icon-section-common"></div>
                     <div id="icon-section-rare"></div>
@@ -66,19 +65,19 @@
                 <!-- Stats -->
                 <div>
                     <div class="card mb-2">
-                        <h3 class="mb-2">Stats</h3>
-                        <div class="p-1 mb-1" style="background: var(--bg-page); border-radius: 12px;">
-                            <p class="text-xs text-dim uppercase font-bold">Total Wealth</p>
+                        <h3 class="mb-2">stats</h3>
+                        <div class="p-1 mb-1" style="border: 2px solid #000;">
+                            <p class="text-xs text-dim uppercase font-bold">total wealth</p>
                             <p id="stat-points" class="font-bold" style="font-size: 1.5rem;">1,000 pts</p>
                         </div>
                     </div>
                     <div class="card">
-                        <h3 class="mb-2">Equipped</h3>
+                        <h3 class="mb-2">equipped</h3>
                         <div class="flex align-center gap-1" id="equipped-display">
                             <div id="equipped-icon-slot"></div>
                             <div>
-                                <p id="equipped-name" class="font-bold">nozus. OG</p>
-                                <p id="equipped-rarity" class="text-xs" style="text-transform: uppercase; letter-spacing: 0.05em;">Common</p>
+                                <p id="equipped-name" class="font-bold">nozus. og</p>
+                                <p id="equipped-rarity" class="text-xs">common</p>
                             </div>
                         </div>
                     </div>

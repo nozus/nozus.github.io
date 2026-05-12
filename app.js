@@ -44,11 +44,10 @@ function getRealChange(currency, timeframe = 'live') {
 // ============================
 function notify(msg, type = 'info') {
     const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
+    toast.style.cssText = `position:fixed; bottom:2rem; right:2rem; background:#000; color:#f8e300; padding:1rem 2rem; border:2px solid #000; font-weight:900; z-index:9999;`;
     toast.innerText = msg;
     document.body.appendChild(toast);
-    setTimeout(() => toast.classList.add('show'), 10);
-    setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 500); }, 4000);
+    setTimeout(() => toast.remove(), 3000);
 }
 
 // ============================
@@ -280,8 +279,8 @@ async function openDetail(currencyId) {
     
     $('stat-holdings').innerText = (state.holdings[c.id] || 0) + ' shares';
     
-    renderHistoryTable();
     renderChart();
+    renderHistoryTable();
 
     // Trade panel
     const tradeHoldings = $('trade-holdings');
@@ -313,17 +312,7 @@ async function renderChart() {
 
     const data = await fetchPriceHistory(c.id, state.chartRange);
 
-    const { change, pct } = getRealChange(c, state.chartRange);
-    const pos = change >= 0;
-    const color = pos ? '#10b981' : '#ef4444';
-
-    // Update floating badge
-    const badge = $('chart-percentage-badge');
-    if (badge) {
-        badge.innerText = (pos ? '+' : '') + pct.toFixed(2) + '%';
-        badge.style.color = color;
-        badge.style.background = pos ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)';
-    }
+    const color = '#000000';
 
     const style = getComputedStyle(document.body);
     const bgColor = style.getPropertyValue('--bg-card').trim();
@@ -334,19 +323,19 @@ async function renderChart() {
         width: container.clientWidth,
         height: 420,
         layout: {
-            background: { type: 'solid', color: bgColor },
-            textColor: textColor,
-            fontFamily: "'Plus Jakarta Sans', sans-serif"
+            background: { type: 'solid', color: '#f8e300' },
+            textColor: '#000000',
+            fontFamily: "Inter, Helvetica, sans-serif"
         },
-        grid: { vertLines: { color: borderColor }, horzLines: { color: borderColor } },
+        grid: { vertLines: { visible: false }, horzLines: { visible: false } },
         crosshair: {
             mode: LightweightCharts.CrosshairMode.Normal,
-            vertLine: { color: '#6366f1', width: 1, style: 2, labelBackgroundColor: '#6366f1' },
-            horzLine: { color: '#6366f1', width: 1, style: 2, labelBackgroundColor: '#6366f1' }
+            vertLine: { color: '#000000', width: 2 },
+            horzLine: { color: '#000000', width: 2 }
         },
-        rightPriceScale: { borderColor: borderColor },
+        rightPriceScale: { borderColor: '#000000' },
         timeScale: { 
-            borderColor: borderColor, 
+            borderColor: '#000000', 
             timeVisible: true,
             secondsVisible: false,
             tickMarkFormatter: (time, tickMarkType, locale) => {
@@ -370,35 +359,8 @@ async function renderChart() {
         handleScale: true
     });
 
-    let series;
-    const type = state.chartType;
-
-    if (type === 'candle' || type === 'bar') {
-        const ohlcData = convertToOHLC(data);
-        series = type === 'candle' 
-            ? chart.addCandlestickSeries({ upColor: '#10b981', downColor: '#ef4444', borderVisible: false, wickUpColor: '#10b981', wickDownColor: '#ef4444' })
-            : chart.addBarSeries({ upColor: '#10b981', downColor: '#ef4444' });
-        series.setData(ohlcData);
-    } else if (type === 'baseline') {
-        series = chart.addBaselineSeries({ 
-            baseValue: { type: 'price', price: data[0]?.value || 10 },
-            topLineColor: '#10b981', topFillColor1: 'rgba(16,185,129,0.2)', topFillColor2: 'rgba(16,185,129,0.0)',
-            bottomLineColor: '#ef4444', bottomFillColor1: 'rgba(239,68,68,0.0)', bottomFillColor2: 'rgba(239,68,68,0.2)'
-        });
-        series.setData(data);
-    } else if (type === 'line') {
-        series = chart.addLineSeries({ color: color, lineWidth: 2 });
-        series.setData(data);
-    } else {
-        // Area (Mountain)
-        series = chart.addAreaSeries({
-            lineColor: color,
-            topColor: pos ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)',
-            bottomColor: 'rgba(16,185,129,0.0)',
-            lineWidth: 3,
-        });
-        series.setData(data);
-    }
+    series = chart.addLineSeries({ color: '#000000', lineWidth: 4 });
+    series.setData(data);
 
     if (data.length === 0) {
         const now = Math.floor(Date.now() / 1000);
@@ -747,8 +709,8 @@ function setupListeners() {
             document.querySelectorAll('.trade-tab').forEach(t => t.classList.toggle('active', t === tab));
             const btn = $('btn-execute-trade');
             if (btn) {
-                btn.innerText = state.tradeAction === 'buy' ? 'Place Buy Order' : 'Place Sell Order';
-                btn.className = state.tradeAction === 'buy' ? 'btn btn-primary w-full' : 'btn btn-sell w-full';
+                btn.innerText = state.tradeAction === 'buy' ? 'place buy order' : 'place sell order';
+                btn.className = 'btn btn-primary w-full';
             }
             updateTradeTotal();
             const pps = $('trade-pps');

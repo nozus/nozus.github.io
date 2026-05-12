@@ -1,8 +1,5 @@
-(function() {
-    const theme = localStorage.getItem('theme') || 'light';
-    if (theme === 'dark') {
-        document.body.classList.add('dark-theme');
-    } else {
-        document.body.classList.remove('dark-theme');
-    }
-})();
+// no name brand theme is permanent.
+document.addEventListener('DOMContentLoaded', () => {
+    document.body.classList.remove('dark-theme');
+    document.body.classList.add('light-theme');
+});
