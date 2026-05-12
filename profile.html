@@ -11,6 +11,13 @@
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
+    <div class="ticker-wrap">
+        <div class="ticker-bar ticker-top"><div class="ticker-content" id="ticker-top"></div></div>
+        <div class="ticker-bar ticker-bottom"><div class="ticker-content" id="ticker-bottom"></div></div>
+        <div class="ticker-bar ticker-left"><div class="ticker-content" id="ticker-left"></div></div>
+        <div class="ticker-bar ticker-right"><div class="ticker-content" id="ticker-right"></div></div>
+    </div>
+
     <div class="app-wrapper">
         <header>
             <div class="logo">nozus.</div>
@@ -32,9 +39,6 @@
                 </a>
                 <a href="leaderboard.html" class="nav-link">
                     <i data-lucide="trophy"></i> <span>Leaderboard</span>
-                </a>
-                <a href="settings.html" class="nav-link">
-                    <i data-lucide="settings"></i> <span>Settings</span>
                 </a>
                 <button id="btn-logout" class="btn btn-ghost w-full" style="justify-content: flex-start; padding: 1rem; border-top: 2px solid #000; border-radius: 0;">
                     <i data-lucide="log-out"></i> <span>sign out</span>
@@ -98,7 +102,20 @@
             user = data.user;
             await refresh();
             setupListeners();
+            await updateTicker();
             lucide.createIcons();
+        }
+
+        async function updateTicker() {
+            const { data } = await supabase.from('currencies').select('symbol, current_price');
+            if (!data) return;
+            const ids = ['ticker-top', 'ticker-bottom', 'ticker-left', 'ticker-right'];
+            const items = data.map(c => `<span style="margin-right: 4rem;">${c.symbol} <b>${parseFloat(c.current_price).toFixed(2)}</b></span>`).join('');
+            const content = items + items + items;
+            ids.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.innerHTML = content;
+            });
         }
 
         async function refresh() {

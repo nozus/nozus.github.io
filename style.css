@@ -2,8 +2,8 @@
 
 :root {
     --primary: #000000;
-    --bg-page: #f8e300; /* No Name Yellow */
-    --bg-card: #f8e300;
+    --bg-page: #ffffff;
+    --bg-card: #ffffff;
     --border: #000000;
     --text-main: #000000;
     --text-muted: #000000;
@@ -32,6 +32,7 @@ body {
     font-family: var(--font-main);
     font-weight: 700;
     -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
 }
 
 h1, h2, h3, h4, .logo {
@@ -110,14 +111,14 @@ header {
 
 /* --- Components --- */
 .card {
-    border: 2px solid var(--border);
+    border: 4px solid var(--border);
     padding: 1.5rem;
     margin-bottom: 1.5rem;
 }
 
 .btn {
     padding: 0.75rem 1.5rem;
-    border: 2px solid var(--border);
+    border: 4px solid var(--border);
     background: var(--bg-page);
     color: var(--text-main);
     font-weight: 900;
@@ -152,7 +153,7 @@ header {
 .input-field input, .input-field textarea {
     width: 100%;
     padding: 0.75rem;
-    border: 2px solid var(--border);
+    border: 4px solid var(--border);
     background: var(--bg-page);
     color: var(--text-main);
     font-family: var(--font-main);
@@ -160,7 +161,7 @@ header {
     outline: none;
 }
 .input-field input:focus {
-    background: #fff;
+    background: #f0f0f0;
 }
 
 /* --- Tables --- */
@@ -171,65 +172,103 @@ header {
 .data-table th {
     text-align: left;
     padding: 1rem;
-    border-bottom: 2px solid var(--border);
+    border-bottom: 4px solid var(--border);
     font-weight: 900;
 }
 .data-table td {
     padding: 1rem;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 2px solid var(--border);
 }
 .data-table tr:hover {
-    background: rgba(0,0,0,0.05);
+    background: #f0f0f0;
 }
 
-/* --- Ticker --- */
-.ticker {
-    border: 2px solid var(--border);
-    padding: 0.5rem 0;
-    margin-bottom: 2rem;
-    overflow: hidden;
-    background: var(--bg-page);
+/* --- Border Ticker (Revolve around rectangle) --- */
+.ticker-wrap {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9999;
 }
-.ticker-content {
+.ticker-bar {
+    position: absolute;
+    background: #000;
+    color: #fff;
     display: flex;
     white-space: nowrap;
-    animation: ticker-scroll 30s linear infinite;
+    overflow: hidden;
+    font-size: 0.8rem;
+    padding: 4px 0;
+    font-weight: 900;
+}
+.ticker-top { top: 0; left: 0; width: 100%; }
+.ticker-bottom { bottom: 0; left: 0; width: 100%; transform: rotate(180deg); }
+.ticker-left { top: 0; left: 0; width: 100vh; transform: rotate(-90deg) translateX(-100%); transform-origin: top left; }
+.ticker-right { top: 0; right: 0; width: 100vh; transform: rotate(90deg) translateX(0); transform-origin: top right; }
+
+.ticker-content {
+    display: flex;
+    animation: ticker-scroll 20s linear infinite;
 }
 @keyframes ticker-scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+/* --- Modals --- */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.8);
+    z-index: 10000;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+.modal-overlay.active {
+    display: flex;
+}
+.modal.card {
+    background: #fff;
+    max-width: 440px;
+    width: 100%;
+}
 
 /* --- Detail View --- */
 .detail-header {
     margin-bottom: 2rem;
 }
 .price-value {
-    font-size: 4rem;
+    font-size: 5rem;
     font-weight: 900;
     line-height: 1;
 }
 .price-unit {
-    font-size: 1.5rem;
+    font-size: 2rem;
 }
 .price-change {
-    font-size: 1.25rem;
+    font-size: 1.5rem;
     display: block;
     margin-top: 0.5rem;
 }
 
 /* --- Trade --- */
 .trade-card {
-    border: 4px solid var(--border);
+    border: 8px solid var(--border);
 }
 .trade-tabs {
     display: flex;
-    border-bottom: 2px solid var(--border);
+    border-bottom: 4px solid var(--border);
 }
 .trade-tab {
     flex: 1;
-    padding: 1rem;
+    padding: 1.5rem;
     border: none;
     background: var(--bg-page);
     font-weight: 900;
     cursor: pointer;
+    font-size: 1.25rem;
 }
 .trade-tab.active {
     background: var(--border);
@@ -248,24 +287,86 @@ header {
 .text-muted { opacity: 0.7; }
 .text-center { text-align: center; }
 
-/* --- Icons (Simplified) --- */
+/* --- Icons --- */
 .player-icon {
-    border: 2px solid var(--border) !important;
+    border: 4px solid var(--border) !important;
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
     background: #fff;
+    position: relative;
 }
 .icon-lock {
-    background: rgba(0,0,0,0.8);
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.9);
     color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    z-index: 10;
+}
+
+/* --- Icon Collection Grid --- */
+.icon-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+.icon-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border: 2px solid transparent;
+}
+.icon-cell.unlocked:hover {
+    border-color: var(--border);
+}
+.icon-cell.equipped {
+    background: #f0f0f0;
+    border-color: var(--border);
+}
+.icon-cell-name {
+    font-size: 0.7rem;
+    font-weight: 900;
+    text-align: center;
+}
+.equipped-badge {
+    font-size: 0.6rem;
+    font-weight: 900;
+    background: #000;
+    color: #fff;
+    padding: 2px 4px;
+}
+.locked-badge {
+    font-size: 0.6rem;
+    opacity: 0.5;
+}
+.icon-rarity-header {
+    margin-top: 2rem;
+    font-weight: 900;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-bottom: 2px solid #000;
+    padding-bottom: 0.25rem;
+}
+.rarity-dot {
+    width: 8px;
+    height: 8px;
+    background: #000;
 }
 
 /* --- Profile --- */
 .profile-hero {
-    padding: 3rem 1rem;
-    border: 2px solid var(--border);
+    padding: 4rem 1rem;
+    border: 4px solid var(--border);
     text-align: center;
     margin-bottom: 2rem;
 }
@@ -309,4 +410,5 @@ header {
         padding: 1rem;
         padding-bottom: 80px;
     }
+    .ticker-wrap { display: none; }
 }

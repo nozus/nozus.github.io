@@ -19,7 +19,13 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://unpkg.com/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
 </head>
-<body>
+    <div class="ticker-wrap">
+        <div class="ticker-bar ticker-top"><div class="ticker-content" id="ticker-top"></div></div>
+        <div class="ticker-bar ticker-bottom"><div class="ticker-content" id="ticker-bottom"></div></div>
+        <div class="ticker-bar ticker-left"><div class="ticker-content" id="ticker-left"></div></div>
+        <div class="ticker-bar ticker-right"><div class="ticker-content" id="ticker-right"></div></div>
+    </div>
+
     <div class="app-wrapper">
         <header>
             <div class="logo">nozus.</div>
@@ -42,9 +48,6 @@
                 </a>
                 <a href="leaderboard.html" class="nav-link">
                     <i data-lucide="trophy"></i> <span>Leaderboard</span>
-                </a>
-                <a href="settings.html" class="nav-link">
-                    <i data-lucide="settings"></i> <span>Settings</span>
                 </a>
                 <div class="nav-link" id="btn-launch">
                     <i data-lucide="plus-circle"></i> <span>Launch Currency</span>

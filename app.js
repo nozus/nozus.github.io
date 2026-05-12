@@ -44,7 +44,7 @@ function getRealChange(currency, timeframe = 'live') {
 // ============================
 function notify(msg, type = 'info') {
     const toast = document.createElement('div');
-    toast.style.cssText = `position:fixed; bottom:2rem; right:2rem; background:#000; color:#f8e300; padding:1rem 2rem; border:2px solid #000; font-weight:900; z-index:9999;`;
+    toast.style.cssText = `position:fixed; bottom:2rem; right:2rem; background:#000; color:#fff; padding:1.5rem 3rem; border:4px solid #000; font-weight:900; z-index:10001; font-size:1.25rem;`;
     toast.innerText = msg;
     document.body.appendChild(toast);
     setTimeout(() => toast.remove(), 3000);
@@ -323,7 +323,7 @@ async function renderChart() {
         width: container.clientWidth,
         height: 420,
         layout: {
-            background: { type: 'solid', color: '#f8e300' },
+            background: { type: 'solid', color: '#ffffff' },
             textColor: '#000000',
             fontFamily: "Inter, Helvetica, sans-serif"
         },
@@ -493,15 +493,16 @@ async function executeDelete() {
 // TICKER
 // ============================
 function updateTicker() {
-    const container = $('ticker-data');
-    if (!container) return;
-    const items = state.currencies.slice(0, 8).map(c => {
-        const { change } = getRealChange(c);
-        const pos = change >= 0;
-        const color = pos ? 'var(--accent)' : 'var(--danger)';
-        return `<span style="margin-right: 2rem;">${c.symbol} <b style="color: ${color}">${c.current_price.toFixed(2)}</b></span>`;
+    const ids = ['ticker-top', 'ticker-bottom', 'ticker-left', 'ticker-right'];
+    const items = state.currencies.map(c => {
+        return `<span style="margin-right: 4rem;">${c.symbol} <b>${c.current_price.toFixed(2)}</b></span>`;
     }).join('');
-    container.innerHTML = items + items;
+    
+    const content = items + items + items; // Extra padding for loop
+    ids.forEach(id => {
+        const el = $(id);
+        if (el) el.innerHTML = content;
+    });
 }
 
 // ============================
@@ -656,8 +657,8 @@ function setupListeners() {
     $('view-market')?.addEventListener('click', () => setView('market'));
     $('btn-back')?.addEventListener('click', () => setView('market'));
 
-    $('btn-launch')?.addEventListener('click', () => { $('modal-launch').style.display = 'flex'; });
-    $('btn-launch-mobile')?.addEventListener('click', () => { $('modal-launch').style.display = 'flex'; });
+    $('btn-launch')?.addEventListener('click', () => { $('modal-launch').classList.add('active'); });
+    $('btn-launch-mobile')?.addEventListener('click', () => { $('modal-launch').classList.add('active'); });
 
     $('btn-logout')?.addEventListener('click', async () => {
         await supabase.auth.signOut();
@@ -667,7 +668,7 @@ function setupListeners() {
     document.querySelectorAll('.btn-close').forEach(b => {
         b.onclick = () => {
             const modal = b.closest('.modal-overlay');
-            if (modal) modal.style.display = 'none';
+            if (modal) modal.classList.remove('active');
         };
     });
 
@@ -689,7 +690,7 @@ function setupListeners() {
                     await recordPrice(data[0].id, 10);
                 }
                 notify(`${symbol} launched successfully!`, 'success');
-                $('modal-launch').style.display = 'none';
+                $('modal-launch').classList.remove('active');
                 launchForm.reset();
                 await refreshData();
             } catch (err) { notify(err.message, 'error'); }
