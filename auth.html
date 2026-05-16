@@ -1,161 +1,130 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>nozus. | login</title>
+    <title>nozus. | Login</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        :root {
-            --primary: #000000;
-            --bg-page: #ffffff;
-            --text-main: #000000;
-            --border: #000000;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            text-transform: lowercase;
-        }
-
         body {
-            font-family: 'Inter', Helvetica, sans-serif;
-            font-weight: 700;
-            min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: var(--bg-page);
-            color: var(--text-main);
+            min-height: 100vh;
+            background-color: var(--bg-main);
         }
-
         .auth-container {
             width: 100%;
-            max-width: 400px;
+            max-width: 440px;
             padding: 2rem;
         }
-
-        .card {
-            border: 4px solid var(--border);
-            padding: 3rem 2rem;
-            background: var(--bg-page);
+        .auth-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-lg);
+            padding: 3rem 2.5rem;
+            text-align: center;
         }
-
-        .logo {
-            font-size: 3rem;
+        .logo-auth {
+            font-size: 2.5rem;
             font-weight: 900;
-            text-align: center;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
             margin-bottom: 0.5rem;
-            letter-spacing: -2px;
         }
-
-        .subtitle {
-            text-align: center;
-            font-size: 0.9rem;
-            margin-bottom: 2.5rem;
-            opacity: 0.7;
+        .auth-subtitle {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
         }
-
         .input-group {
+            text-align: left;
             margin-bottom: 1.5rem;
         }
-
-        .input-group label {
-            display: block;
-            font-weight: 900;
-            margin-bottom: 0.5rem;
-        }
-
-        input {
+        .input-control {
             width: 100%;
-            background: var(--bg-page);
-            border: 2px solid var(--border);
-            padding: 1rem;
-            color: var(--text-main);
+            padding: 0.8rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
             font-size: 1rem;
             font-family: inherit;
-            font-weight: 700;
+            background: var(--bg-main);
+            transition: all 0.2s;
+        }
+        .input-control:focus {
             outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
         }
-
-        input:focus {
-            background: #fff;
+        .password-container {
+            position: relative;
         }
-
-        .btn-submit {
-            width: 100%;
-            padding: 1rem;
-            background: var(--border);
-            color: var(--bg-page);
-            border: none;
-            font-weight: 900;
-            font-size: 1.25rem;
+        .password-toggle {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
             cursor: pointer;
-            margin-top: 1rem;
+            color: var(--text-muted);
         }
-
-        .btn-submit:hover {
-            background: #fff;
-            color: var(--border);
-            border: 2px solid var(--border);
+        .password-toggle:hover {
+            color: var(--text-main);
         }
-
-        .toggle-text {
-            text-align: center;
-            margin-top: 2rem;
-            font-size: 0.875rem;
-        }
-
-        .toggle-link {
-            font-weight: 900;
-            cursor: pointer;
-            text-decoration: underline;
-        }
-
         .error-box {
-            margin-top: 1.5rem;
-            padding: 1rem;
-            border: 2px solid #000;
-            color: red;
-            font-size: 0.8rem;
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--negative);
+            border: 1px solid var(--negative);
+            padding: 0.75rem;
+            border-radius: var(--radius-md);
+            margin-top: 1rem;
             display: none;
-            line-height: 1.4;
+            font-size: 0.9rem;
+        }
+        .toggle-link {
+            color: var(--accent);
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .toggle-link:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
-
 <body>
     <div class="auth-container">
-        <div class="card">
-            <div class="logo">nozus.</div>
-            <p class="subtitle" id="auth-subtitle">simplistic exchange.</p>
+        <div class="auth-card">
+            <div class="logo-auth">
+                <i data-lucide="activity" style="width:36px;height:36px;"></i> nozus.
+            </div>
+            <p class="auth-subtitle" id="auth-subtitle">Welcome to the market.</p>
 
             <form id="auth-form">
                 <div class="input-group">
-                    <label>username</label>
-                    <input type="text" id="username" required>
+                    <label style="display:block;margin-bottom:0.5rem;font-weight:600;color:var(--text-muted);font-size:0.9rem;">Username</label>
+                    <input type="text" id="username" class="input-control" required>
                 </div>
                 <div class="input-group">
-                    <label>password</label>
-                    <div style="position: relative;">
-                        <input type="password" id="password" required>
-                        <span id="toggle-password-visibility"
-                            style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 0.7rem; font-weight: 900;">show</span>
+                    <label style="display:block;margin-bottom:0.5rem;font-weight:600;color:var(--text-muted);font-size:0.9rem;">Password</label>
+                    <div class="password-container">
+                        <input type="password" id="password" class="input-control" required>
+                        <i data-lucide="eye" class="password-toggle" id="toggle-password-visibility"></i>
                     </div>
                 </div>
-                <button type="submit" id="submit-btn" class="btn-submit">login</button>
+                <button type="submit" id="submit-btn" class="btn btn-primary w-full" style="padding: 0.8rem; font-size: 1rem;">Log In</button>
             </form>
 
             <div class="error-box" id="error-display"></div>
 
-            <p class="toggle-text">
-                <span id="toggle-desc">no account?</span>
-                <span class="toggle-link" id="toggle-auth">create one</span>
+            <p class="mt-4 text-sm text-muted">
+                <span id="toggle-desc">No account?</span>
+                <span class="toggle-link" id="toggle-auth">Create one</span>
             </p>
         </div>
     </div>
@@ -165,6 +134,8 @@
 
         const { createClient } = window.supabase;
         const supabase = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+
+        lucide.createIcons();
 
         let isSignUp = false;
         const els = {
@@ -181,14 +152,15 @@
         els.togglePass.onclick = () => {
             const isPass = els.password.type === 'password';
             els.password.type = isPass ? 'text' : 'password';
-            els.togglePass.innerText = isPass ? 'hide' : 'show';
+            els.togglePass.setAttribute('data-lucide', isPass ? 'eye-off' : 'eye');
+            lucide.createIcons();
         };
 
         els.toggleLink.onclick = () => {
             isSignUp = !isSignUp;
-            els.submitBtn.innerText = isSignUp ? 'create account' : 'login';
-            els.toggleDesc.innerText = isSignUp ? 'already have an account?' : "no account?";
-            els.toggleLink.innerText = isSignUp ? 'login' : 'create one';
+            els.submitBtn.innerText = isSignUp ? 'Create Account' : 'Log In';
+            els.toggleDesc.innerText = isSignUp ? 'Already have an account?' : "No account?";
+            els.toggleLink.innerText = isSignUp ? 'Log in' : 'Create one';
             els.errorDisplay.style.display = 'none';
         };
 
@@ -215,7 +187,7 @@
                         await supabase.from('profiles').insert([{ id: res.data.user.id, username: user, points: 1000 }]);
                     } catch (pE) { console.warn("Profile init failed:", pE); }
 
-                    alert("Account Created!");
+                    alert("Account Created! You can now log in.");
                 } else {
                     res = await supabase.auth.signInWithPassword({ email, password: pass });
                     if (res.error) throw res.error;
@@ -232,5 +204,4 @@
         };
     </script>
 </body>
-
 </html>

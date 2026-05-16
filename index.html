@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>nozus. | simplistic exchange</title>
+    <title>nozus. | Finance Social Network</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <script src="theme.js"></script>
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="module">
         import { supabase } from './supabase-client.js';
@@ -19,195 +21,255 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://unpkg.com/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
 </head>
-    <div class="ticker-wrap">
-        <div class="ticker-bar ticker-top"><div class="ticker-content" id="ticker-top"></div></div>
-        <div class="ticker-bar ticker-bottom"><div class="ticker-content" id="ticker-bottom"></div></div>
-        <div class="ticker-bar ticker-left"><div class="ticker-content" id="ticker-left"></div></div>
-        <div class="ticker-bar ticker-right"><div class="ticker-content" id="ticker-right"></div></div>
+<body>
+    <header class="app-header">
+        <div class="logo">
+            <i data-lucide="activity"></i> nozus.
+        </div>
+        <div class="search-bar-container">
+            <i data-lucide="search" class="search-icon"></i>
+            <input type="text" class="search-bar" id="search-input" placeholder="Search for a currency (e.g., AAPL)">
+        </div>
+        <div id="user-display" style="display: none;">
+            <div class="user-dropdown" onclick="window.location.href='profile.html'">
+                <div id="nav-icon-slot"></div>
+                <span id="nav-username" class="font-bold">User</span>
+                <span id="user-points" class="points-badge">0 pts</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Ticker Tape -->
+    <div class="ticker-tape">
+        <div class="ticker-tape-content" id="global-ticker">
+            <!-- Dynamically populated -->
+        </div>
     </div>
 
-    <div class="app-wrapper">
-        <header>
-            <div class="logo">nozus.</div>
-            <div class="user-pill" id="user-display" style="display: none; border: 2px solid #000; padding: 0.5rem 1rem;">
-                <div class="flex align-center gap-1">
-                    <div id="nav-icon-slot"></div>
-                    <span id="nav-username" class="font-bold">Username</span>
-                    <span id="user-points" class="btn btn-primary" style="padding: 0.2rem 0.5rem; font-size: 0.8rem;">0 pts</span>
-                </div>
-            </div>
-        </header>
-
+    <div class="app-container" id="main-container">
+        <!-- Sidebar -->
         <aside class="sidebar">
             <nav>
-                <div class="nav-link active" id="view-market">
-                    <i data-lucide="layout-grid"></i> <span>Market</span>
+                <div class="nav-item active" id="view-market">
+                    <i data-lucide="line-chart"></i> Markets
                 </div>
-                <a href="profile.html" class="nav-link">
-                    <i data-lucide="user"></i> <span>Profile</span>
-                </a>
-                <a href="leaderboard.html" class="nav-link">
-                    <i data-lucide="trophy"></i> <span>Leaderboard</span>
-                </a>
-                <div class="nav-link" id="btn-launch">
-                    <i data-lucide="plus-circle"></i> <span>Launch Currency</span>
+                <div class="nav-item" onclick="window.location.href='profile.html'">
+                    <i data-lucide="user"></i> Portfolio
+                </div>
+                <div class="nav-item" onclick="window.location.href='leaderboard.html'">
+                    <i data-lucide="trophy"></i> Leaderboard
+                </div>
+                <div class="nav-item" id="btn-launch">
+                    <i data-lucide="rocket"></i> Launch Currency
                 </div>
             </nav>
-            <div style="margin-top: auto; border-top: 2px solid #000;">
-                <button id="btn-logout" class="btn btn-ghost w-full" style="justify-content: flex-start; padding: 1rem;">
-                    <i data-lucide="log-out"></i> <span>sign out</span>
-                </button>
+            <div class="mt-4 pt-4" style="border-top: 1px solid var(--border); padding-top: 1rem;">
+                <div class="nav-item text-negative" id="btn-logout">
+                    <i data-lucide="log-out"></i> Sign Out
+                </div>
             </div>
         </aside>
 
+        <!-- Main Content -->
         <main class="main-content">
-            <!-- Ticker Bar -->
-            <div class="ticker">
-                <div class="ticker-content" id="ticker-data">
-                    <span style="margin-right: 2rem;">NZUS <b style="color: var(--accent)">10.00</b></span>
-                </div>
-            </div>
-
-            <!-- ===== MARKET VIEW ===== -->
+            
+            <!-- MARKET VIEW -->
             <div id="market-view">
-                <div class="mb-2">
-                    <h1>market</h1>
-                    <p class="text-muted">live performance of personal currencies.</p>
+                <div class="flex justify-between align-center mb-4">
+                    <div>
+                        <h1 class="text-2xl font-black">Market Overview</h1>
+                        <p class="text-muted">Discover and trade community-created currencies.</p>
+                    </div>
                 </div>
-                <div class="card" style="padding: 0; overflow: hidden;">
+
+                <div class="card p-0" style="padding: 0; overflow: hidden;">
+                    <div class="p-2 border-b flex justify-between align-center" style="border-bottom: 1px solid var(--border);">
+                        <h3 class="font-bold m-0" style="margin:0;">Trending Currencies</h3>
+                        <div class="range-selector flex gap-1" id="market-tabs">
+                            <button class="range-btn" data-range="1h">1H</button>
+                            <button class="range-btn active" data-range="1d">1D</button>
+                            <button class="range-btn" data-range="1m">1M</button>
+                            <button class="range-btn" data-range="1y">1Y</button>
+                        </div>
+                    </div>
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th>symbol</th>
-                                <th>name</th>
-                                <th style="text-align:right">price</th>
-                                <th style="text-align:right">change</th>
-                                <th style="text-align:right">% change</th>
+                                <th>Symbol</th>
+                                <th>Name</th>
+                                <th class="text-right">Price</th>
+                                <th class="text-right">Change</th>
+                                <th class="text-right">% Change</th>
                             </tr>
                         </thead>
-                        <tbody id="market-body"></tbody>
+                        <tbody id="market-body">
+                            <tr><td colspan="5" class="text-center text-muted">Loading markets...</td></tr>
+                        </tbody>
                     </table>
                 </div>
             </div>
 
-
-            <!-- ===== DETAIL VIEW ===== -->
+            <!-- DETAIL VIEW -->
             <div id="detail-view" style="display: none;">
-                <div class="detail-back" id="btn-back" style="font-weight: 900; cursor: pointer; margin-bottom: 1rem;">
-                    ← back to market
+                <div class="mb-4">
+                    <button class="btn btn-ghost p-0" id="btn-back" style="padding: 0;">
+                        <i data-lucide="arrow-left"></i> Back to Markets
+                    </button>
                 </div>
 
-                <div class="detail-header">
-                    <div class="flex align-center gap-1 mb-1">
-                        <span class="symbol-pill" id="detail-symbol" style="border: 2px solid #000; padding: 0.2rem 0.5rem;">NZUS</span>
-                        <h1 id="detail-name">currency name</h1>
+                <div class="stock-header">
+                    <div>
+                        <h1 class="text-2xl font-black flex align-center gap-2">
+                            <span id="detail-name">Currency Name</span>
+                            <span class="symbol-pill text-sm" id="detail-symbol">SYM</span>
+                        </h1>
                     </div>
-                    <div class="price-display">
-                        <span class="price-value" id="detail-price">0.00</span>
-                        <span class="price-unit">pts</span>
-                        <span class="price-change" id="detail-change">+0.00 (+0.00%)</span>
-                        <button id="btn-delete-currency" class="btn btn-ghost" style="display:none; color: red;">
-                            delete
-                        </button>
+                    <div class="text-right">
+                        <div class="stock-price-huge" id="detail-price">0.00</div>
+                        <div class="stock-change-huge" id="detail-change">
+                            +0.00 (+0.00%) <i data-lucide="trending-up"></i>
+                        </div>
                     </div>
                 </div>
 
+                <div class="tabs">
+                    <div class="tab active">Summary</div>
+                    <div class="tab">Chart</div>
+                    <div class="tab text-muted" style="cursor:not-allowed">Conversations</div>
+                </div>
 
-
-                <div class="detail-grid">
-                    <div>
-                        <div class="card mb-2" style="padding: 0; overflow: hidden; position: relative;">
-                            <div class="p-1 flex justify-between align-center border-b" style="flex-wrap: wrap; gap: 0.5rem;">
-                                <div class="range-selector mb-0" id="chart-tabs">
-                                    <button class="range-btn" data-range="1h">1H</button>
-                                    <button class="range-btn active" data-range="1d">1D</button>
-                                    <button class="range-btn" data-range="1m">1M</button>
-                                    <button class="range-btn" data-range="1y">1Y</button>
-                                    <button class="range-btn" data-range="all">All</button>
-                                </div>
-                                <div class="range-selector mb-0" id="chart-type-tabs">
-                                    <button class="range-btn active" data-type="area" title="Mountain"><i data-lucide="area-chart" style="width:14px;height:14px;"></i></button>
-                                    <button class="range-btn" data-type="line" title="Line"><i data-lucide="line-chart" style="width:14px;height:14px;"></i></button>
-                                    <button class="range-btn" data-type="candle" title="Candles"><i data-lucide="candlestick-chart" style="width:14px;height:14px;"></i></button>
-                                    <button class="range-btn" data-type="bar" title="Bars"><i data-lucide="bar-chart-3" style="width:14px;height:14px;"></i></button>
-                                    <button class="range-btn" data-type="baseline" title="Baseline"><i data-lucide="trending-up" style="width:14px;height:14px;"></i></button>
-                                </div>
-                            </div>
-                            <div id="chart-container" style="height: 420px; position: relative;">
-                                <div id="chart-percentage-badge" style="position: absolute; top: 1rem; right: 4rem; z-index: 10; padding: 0.25rem 0.75rem; border-radius: 8px; font-weight: 800; font-size: 1.25rem;"></div>
-                            </div>
+                <div class="chart-wrapper">
+                    <div class="chart-controls">
+                        <div class="flex gap-1" id="chart-tabs">
+                            <button class="range-btn" data-range="1h">1H</button>
+                            <button class="range-btn active" data-range="1d">1D</button>
+                            <button class="range-btn" data-range="1m">1M</button>
+                            <button class="range-btn" data-range="1y">1Y</button>
+                            <button class="range-btn" data-range="all">All</button>
                         </div>
-                        <div class="card" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                            <div class="stat-item"><span class="stat-label">ipo price</span><span class="stat-value" id="stat-ipo">10.00</span></div>
-                            <div class="stat-item"><span class="stat-label">high</span><span class="stat-value" id="stat-high">—</span></div>
-                            <div class="stat-item"><span class="stat-label">low</span><span class="stat-value" id="stat-low">—</span></div>
-                            <div class="stat-item"><span class="stat-label">cap</span><span class="stat-value" id="stat-cap">—</span></div>
-                        </div>
-
-                        <div class="card" style="padding: 0; overflow: hidden;">
-                            <div class="p-1 border-b"><h3 style="font-size: 0.9rem;">Price History</h3></div>
-                            <table class="data-table" style="font-size: 0.85rem;">
-                                <thead>
-                                    <tr>
-                                        <th>date</th>
-                                        <th style="text-align:right">price</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="history-body">
-                                    <tr><td colspan="3" class="text-center py-2 text-muted">No history recorded yet.</td></tr>
-                                </tbody>
-                            </table>
+                        <div class="flex gap-1" id="chart-type-tabs">
+                            <button class="range-btn active" data-type="area"><i data-lucide="area-chart" style="width:16px;height:16px;"></i></button>
+                            <button class="range-btn" data-type="candle"><i data-lucide="candlestick-chart" style="width:16px;height:16px;"></i></button>
                         </div>
                     </div>
-                    <div>
-                        <div class="card trade-card">
-                            <div class="trade-tabs">
-                                <button class="trade-tab active" data-action="buy">Buy</button>
-                                <button class="trade-tab" data-action="sell">Sell</button>
-                            </div>
-                            <div class="input-field">
-                                <label>shares</label>
-                                <input type="number" id="trade-shares" value="1" min="1">
-                            </div>
-                            <div class="trade-summary">
-                                <div class="flex justify-between mb-1"><span class="text-muted">Price / share</span><span id="trade-pps" class="font-bold">0 pts</span></div>
-                                <div class="flex justify-between mb-1"><span class="text-muted">Your Holdings</span><span id="trade-holdings" class="font-bold">0 shares</span></div>
-                                <hr style="border:none; border-top: 1px solid var(--border); margin: 0.75rem 0;">
-                                <div class="flex justify-between"><span class="font-bold">Est. Total</span><span id="trade-total" class="font-bold" style="font-size: 1.25rem;">0 pts</span></div>
-                            </div>
-                            <button id="btn-execute-trade" class="btn btn-primary w-full">place order</button>
+                    <div id="chart-container" style="height: 400px; width: 100%;"></div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                    <div class="card">
+                        <h3 class="card-title">Key Statistics</h3>
+                        <div class="stat-grid mt-4">
+                            <div class="stat-box"><span class="stat-label">Previous Close</span><span class="stat-val" id="stat-prev">--</span></div>
+                            <div class="stat-box"><span class="stat-label">Open (IPO)</span><span class="stat-val" id="stat-ipo">10.00</span></div>
+                            <div class="stat-box"><span class="stat-label">Volume (24h shares)</span><span class="stat-val" id="stat-vol">--</span></div>
+                            <div class="stat-box"><span class="stat-label">Market Cap</span><span class="stat-val" id="stat-cap">--</span></div>
+                            <div class="stat-box"><span class="stat-label">Day's Range</span><span class="stat-val" id="stat-range">--</span></div>
+                            <div class="stat-box"><span class="stat-label">All-time Range</span><span class="stat-val" id="stat-52wk">--</span></div>
                         </div>
+                    </div>
+
+                    <div class="card p-0" style="padding: 0; overflow: hidden;">
+                        <div class="p-2 border-b" style="border-bottom: 1px solid var(--border);">
+                            <h3 class="card-title" style="margin:0;">Recent Trades</h3>
+                        </div>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th class="text-right">Price</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-body">
+                                <tr><td colspan="2" class="text-center text-muted">No history yet.</td></tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
-
         </main>
+
+        <!-- Right Panel (Used in Detail View for Trading) -->
+        <aside class="right-panel" id="right-panel" style="display: none;">
+            <div class="trade-panel">
+                <div class="trade-toggle">
+                    <button class="trade-toggle-btn active" data-action="buy">Buy</button>
+                    <button class="trade-toggle-btn" data-action="sell">Sell</button>
+                </div>
+
+                <div class="input-group">
+                    <label>Order Type</label>
+                    <select class="input-control" disabled>
+                        <option>Market Order</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>Shares</label>
+                    <input type="number" class="input-control" id="trade-shares" value="1" min="1">
+                </div>
+
+                <div class="order-summary mt-4">
+                    <div class="summary-row">
+                        <span class="text-muted">Market Price</span>
+                        <span id="trade-pps" class="font-bold">--</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="text-muted">Available Funds</span>
+                        <span id="trade-funds" class="font-bold">--</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="text-muted">Your Holdings</span>
+                        <span id="trade-holdings" class="font-bold">0 shares</span>
+                    </div>
+                    <div class="summary-row mt-2">
+                        <span>Estimated Total</span>
+                        <span id="trade-total">--</span>
+                    </div>
+                </div>
+
+                <button id="btn-execute-trade" class="btn btn-buy w-full">Place Buy Order</button>
+                
+                <div class="mt-4 pt-4 border-t" style="border-top: 1px solid var(--border); text-align: center;">
+                    <button id="btn-delete-currency" class="btn btn-ghost text-negative w-full" style="display:none;">
+                        <i data-lucide="trash-2"></i> Delete Currency
+                    </button>
+                </div>
+            </div>
+        </aside>
+
     </div>
 
-    <!-- Launch Modal -->
+    <!-- Modals -->
     <div id="modal-launch" class="modal-overlay">
-        <div class="modal card" style="width: 100%; max-width: 400px; margin: auto;">
-            <h3 class="mb-2">launch currency</h3>
+        <div class="modal-content">
+            <button class="modal-close btn-close"><i data-lucide="x"></i></button>
+            <h2 class="mb-4">Launch Currency</h2>
             <form id="form-launch">
-                <div class="input-field"><label>name</label><input type="text" id="launch-name" required></div>
-                <div class="input-field"><label>ticker (4 letters)</label><input type="text" id="launch-symbol" required maxlength="4" minlength="4"></div>
-                <button type="submit" class="btn btn-primary w-full">launch</button>
-                <button type="button" class="btn btn-ghost w-full mt-1 btn-close">cancel</button>
+                <div class="input-group">
+                    <label>Currency Name</label>
+                    <input type="text" id="launch-name" class="input-control" placeholder="e.g. Apple Inc." required>
+                </div>
+                <div class="input-group">
+                    <label>Ticker Symbol (1-4 letters)</label>
+                    <input type="text" id="launch-symbol" class="input-control" placeholder="AAPL" required maxlength="4" pattern="[A-Za-z]{1,4}" title="1 to 4 letters only">
+                </div>
+                <div class="text-sm text-muted mb-4">
+                    Launching a currency costs 0 points. The initial IPO price is strictly set to 10.00 pts.
+                </div>
+                <button type="submit" class="btn btn-primary w-full">Launch to Market</button>
             </form>
         </div>
     </div>
 
-    <!-- Delete Confirmation Modal -->
+    <!-- Delete Confirmation -->
     <div id="modal-confirm-delete" class="modal-overlay">
-        <div class="modal card" style="width: 100%; max-width: 400px; margin: auto;">
-            <div class="text-center mb-2">
-                <i data-lucide="alert-triangle" style="width: 48px; height: 48px; color: var(--danger); margin-bottom: 1rem;"></i>
-                <h3 class="mb-1">Delete Currency?</h3>
-                <p class="text-muted text-xs">This will permanently delete the currency and all its trade history. This action cannot be undone.</p>
-            </div>
-            <div class="flex gap-1">
+        <div class="modal-content text-center">
+            <i data-lucide="alert-triangle" class="text-negative mb-2" style="width: 48px; height: 48px;"></i>
+            <h2 class="mb-2">Delete Currency?</h2>
+            <p class="text-muted mb-4">This permanently deletes the currency and all trade history. This action cannot be undone.</p>
+            <div class="flex gap-2">
                 <button id="btn-confirm-delete-yes" class="btn btn-sell w-full">Delete Forever</button>
-                <button id="btn-confirm-delete-no" class="btn btn-ghost w-full btn-close">Cancel</button>
+                <button id="btn-confirm-delete-no" class="btn btn-secondary w-full btn-close">Cancel</button>
             </div>
         </div>
     </div>

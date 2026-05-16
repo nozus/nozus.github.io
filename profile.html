@@ -3,62 +3,159 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>nozus. | my profile</title>
+    <title>nozus. | My Portfolio</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <script src="theme.js"></script>
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module">
+        import { supabase } from './supabase-client.js';
+        const check = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) window.location.href = 'auth.html';
+        };
+        check();
+    </script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .profile-hero {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            background: white;
+            padding: 2rem;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+        }
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .icon-cell {
+            background: var(--bg-main);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 0.5rem;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .icon-cell.unlocked:hover {
+            border-color: var(--accent);
+            background: white;
+            box-shadow: var(--shadow-md);
+        }
+        .icon-cell.equipped {
+            border-color: var(--accent);
+            background: rgba(139, 92, 246, 0.05);
+        }
+        .icon-cell-name {
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .equipped-badge {
+            position: absolute;
+            top: -8px;
+            background: var(--accent);
+            color: white;
+            font-size: 0.65rem;
+            font-weight: 800;
+            padding: 0.1rem 0.4rem;
+            border-radius: var(--radius-full);
+        }
+        .locked-badge {
+            position: absolute;
+            top: -8px;
+            background: var(--text-muted);
+            color: white;
+            font-size: 0.65rem;
+            font-weight: 800;
+            padding: 0.1rem 0.4rem;
+            border-radius: var(--radius-full);
+        }
+        .icon-cell.locked {
+            opacity: 0.5;
+            filter: grayscale(1);
+        }
+        .icon-rarity-header {
+            font-size: 0.9rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .rarity-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+    </style>
 </head>
 <body>
-    <div class="ticker-wrap">
-        <div class="ticker-bar ticker-top"><div class="ticker-content" id="ticker-top"></div></div>
-        <div class="ticker-bar ticker-bottom"><div class="ticker-content" id="ticker-bottom"></div></div>
-        <div class="ticker-bar ticker-left"><div class="ticker-content" id="ticker-left"></div></div>
-        <div class="ticker-bar ticker-right"><div class="ticker-content" id="ticker-right"></div></div>
+    <header class="app-header">
+        <div class="logo">
+            <i data-lucide="activity"></i> nozus.
+        </div>
+        <div class="search-bar-container"></div>
+        <div id="user-display">
+            <div class="user-dropdown">
+                <div id="nav-icon-slot"></div>
+                <span id="nav-username" class="font-bold">User</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="ticker-tape">
+        <div class="ticker-tape-content" id="global-ticker"></div>
     </div>
 
-    <div class="app-wrapper">
-        <header>
-            <div class="logo">nozus.</div>
-            <div class="user-pill" id="user-display" style="border: 2px solid #000; padding: 0.5rem 1rem;">
-                <div class="flex align-center gap-1">
-                    <div id="nav-icon-slot"></div>
-                    <span id="nav-username" class="font-bold">Username</span>
-                </div>
-            </div>
-        </header>
-
+    <div class="app-container">
+        <!-- Sidebar -->
         <aside class="sidebar">
             <nav>
-                <a href="index.html" class="nav-link">
-                    <i data-lucide="layout-grid"></i> <span>Market</span>
-                </a>
-                <a href="profile.html" class="nav-link active">
-                    <i data-lucide="user"></i> <span>Profile</span>
-                </a>
-                <a href="leaderboard.html" class="nav-link">
-                    <i data-lucide="trophy"></i> <span>Leaderboard</span>
-                </a>
-                <button id="btn-logout" class="btn btn-ghost w-full" style="justify-content: flex-start; padding: 1rem; border-top: 2px solid #000; border-radius: 0;">
-                    <i data-lucide="log-out"></i> <span>sign out</span>
-                </button>
+                <div class="nav-item" onclick="window.location.href='index.html'">
+                    <i data-lucide="line-chart"></i> Markets
+                </div>
+                <div class="nav-item active" onclick="window.location.href='profile.html'">
+                    <i data-lucide="user"></i> Portfolio
+                </div>
+                <div class="nav-item" onclick="window.location.href='leaderboard.html'">
+                    <i data-lucide="trophy"></i> Leaderboard
+                </div>
             </nav>
+            <div class="mt-4 pt-4 border-t" style="border-top: 1px solid var(--border);">
+                <div class="nav-item text-negative" id="btn-logout">
+                    <i data-lucide="log-out"></i> Sign Out
+                </div>
+            </div>
         </aside>
 
+        <!-- Main Content -->
         <main class="main-content">
-            <!-- Profile Header -->
             <div class="profile-hero">
-                <div id="profile-icon-display"></div>
-                <h1 id="profile-username" class="profile-name">username</h1>
-                <p id="profile-points" class="text-muted font-bold">1,000 pts</p>
+                <div id="profile-icon-display" style="width: 80px; height: 80px;"></div>
+                <div>
+                    <h1 id="profile-username" class="text-2xl font-black">username</h1>
+                    <p id="profile-points" class="text-muted font-bold text-lg">1,000 pts</p>
+                </div>
             </div>
 
-            <div class="grid" style="grid-template-columns: 1fr 300px; gap: 2rem;">
+            <div class="grid" style="display: grid; grid-template-columns: 1fr 300px; gap: 2rem;">
                 <!-- Icon Collection -->
                 <div class="card">
-                    <h3 class="mb-1">icon collection</h3>
-                    <p class="text-muted text-xs mb-2">tap an unlocked icon to equip it.</p>
+                    <h3 class="mb-1">Icon Collection</h3>
+                    <p class="text-muted text-xs mb-4">Tap an unlocked icon to equip it.</p>
                     
                     <div id="icon-section-common"></div>
                     <div id="icon-section-rare"></div>
@@ -68,20 +165,13 @@
 
                 <!-- Stats -->
                 <div>
-                    <div class="card mb-2">
-                        <h3 class="mb-2">stats</h3>
-                        <div class="p-1 mb-1" style="border: 2px solid #000;">
-                            <p class="text-xs text-dim uppercase font-bold">total wealth</p>
-                            <p id="stat-points" class="font-bold" style="font-size: 1.5rem;">1,000 pts</p>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <h3 class="mb-2">equipped</h3>
-                        <div class="flex align-center gap-1" id="equipped-display">
+                    <div class="card mb-4">
+                        <h3 class="mb-4">Equipped Identity</h3>
+                        <div class="flex align-center gap-2" id="equipped-display">
                             <div id="equipped-icon-slot"></div>
                             <div>
                                 <p id="equipped-name" class="font-bold">nozus. og</p>
-                                <p id="equipped-rarity" class="text-xs">common</p>
+                                <p id="equipped-rarity" class="text-xs font-bold" style="text-transform: uppercase;">common</p>
                             </div>
                         </div>
                     </div>
@@ -95,6 +185,7 @@
         import { ICONS, RARITY_COLORS, RARITY_LABELS, renderIcon } from './icons.js';
 
         let user, profile;
+        const $ = (id) => document.getElementById(id);
 
         async function init() {
             const { data } = await supabase.auth.getUser();
@@ -108,45 +199,36 @@
 
         async function updateTicker() {
             const { data } = await supabase.from('currencies').select('symbol, current_price');
-            if (!data) return;
-            const ids = ['ticker-top', 'ticker-bottom', 'ticker-left', 'ticker-right'];
-            const items = data.map(c => `<span style="margin-right: 4rem;">${c.symbol} <b>${parseFloat(c.current_price).toFixed(2)}</b></span>`).join('');
-            const content = items + items + items;
-            ids.forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.innerHTML = content;
-            });
+            const el = $('global-ticker');
+            if (!data || data.length === 0) {
+                el.innerHTML = '<span class="ticker-item">No active markets</span>';
+                return;
+            }
+            const items = data.map(c => `<span class="ticker-item">${c.symbol} <b>${parseFloat(c.current_price).toFixed(2)}</b></span>`).join('');
+            el.innerHTML = items + items + items;
         }
 
         async function refresh() {
             let { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-            if (!data) {
-                const username = user.user_metadata?.username || 'user_' + user.id.substring(0, 8);
-                const { data: np } = await supabase.from('profiles')
-                    .insert([{ id: user.id, username: username, points: 1000, equipped_icon: 'nozus_default' }])
-                    .select().single();
-                data = np;
-            }
             if (!data) return;
             profile = data;
 
             // Nav
-            document.getElementById('nav-username').innerText = profile.username;
+            $('nav-username').innerText = profile.username;
             const equippedId = profile.equipped_icon || 'nozus_default';
-            document.getElementById('nav-icon-slot').innerHTML = renderIcon(equippedId, 32);
+            $('nav-icon-slot').innerHTML = renderIcon(equippedId, 24);
 
             // Profile hero
-            document.getElementById('profile-icon-display').innerHTML = renderIcon(equippedId, 100);
-            document.getElementById('profile-username').innerText = profile.username;
-            document.getElementById('profile-points').innerText = `${profile.points.toLocaleString()} pts`;
-            document.getElementById('stat-points').innerText = `${profile.points.toLocaleString()} pts`;
+            $('profile-icon-display').innerHTML = renderIcon(equippedId, 80);
+            $('profile-username').innerText = profile.username;
+            $('profile-points').innerText = `${profile.points.toLocaleString()} pts`;
 
             // Equipped card
             const eIcon = ICONS[equippedId] || ICONS['nozus_default'];
-            document.getElementById('equipped-icon-slot').innerHTML = renderIcon(equippedId, 56);
-            document.getElementById('equipped-name').innerText = eIcon.name;
-            document.getElementById('equipped-rarity').innerText = RARITY_LABELS[eIcon.rarity];
-            document.getElementById('equipped-rarity').style.color = RARITY_COLORS[eIcon.rarity];
+            $('equipped-icon-slot').innerHTML = renderIcon(equippedId, 48);
+            $('equipped-name').innerText = eIcon.name;
+            $('equipped-rarity').innerText = RARITY_LABELS[eIcon.rarity];
+            $('equipped-rarity').style.color = RARITY_COLORS[eIcon.rarity];
 
             // Render icon collection
             renderIconGrid();
@@ -159,7 +241,7 @@
             }
 
             for (const [rarity, icons] of Object.entries(groups)) {
-                const section = document.getElementById(`icon-section-${rarity}`);
+                const section = $('icon-section-' + rarity);
                 if (!section || icons.length === 0) continue;
                 const equipped = profile.equipped_icon || 'nozus_default';
                 section.innerHTML = `
@@ -171,15 +253,15 @@
                         ${icons.map(ic => {
                             const locked = !ic.free;
                             const isEquipped = ic.id === equipped;
-                            return `
+                            return \`
                                 <div class="icon-cell ${locked ? 'locked' : 'unlocked'} ${isEquipped ? 'equipped' : ''}"
                                      data-icon-id="${ic.id}" ${!locked ? 'style="cursor:pointer"' : ''}>
-                                    ${renderIcon(ic.id, 56, locked)}
+                                    ${renderIcon(ic.id, 40, locked)}
                                     <span class="icon-cell-name">${ic.name}</span>
                                     ${isEquipped ? '<span class="equipped-badge">EQUIPPED</span>' : ''}
                                     ${locked ? '<span class="locked-badge">LOCKED</span>' : ''}
                                 </div>
-                            `;
+                            \`;
                         }).join('')}
                     </div>
                 `;
@@ -187,12 +269,11 @@
         }
 
         function setupListeners() {
-            document.getElementById('btn-logout').onclick = async () => {
+            $('btn-logout').onclick = async () => {
                 await supabase.auth.signOut();
                 window.location.href = 'auth.html';
             };
 
-            // Equip icon on click
             document.addEventListener('click', async (e) => {
                 const cell = e.target.closest('.icon-cell.unlocked');
                 if (!cell) return;
